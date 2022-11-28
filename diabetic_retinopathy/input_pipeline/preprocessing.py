@@ -7,10 +7,15 @@ def preprocess(image, label, img_height, img_width, scale=300):
     """Dataset preprocessing: Normalizing and resizing"""
 
     # Normalize image: `uint8` -> `float32`.
-    tf.cast(image, tf.float32) / 255.
+    tf.cast(image, tf.float32)
 
     # Resize image
-    image = tf.image.resize(image, size=(img_height, img_width))
+   # image = tf.image.resize(image, size=(img_height, img_width))
+    """Resize and Rescale images"""
+    x = image[image.shape[0] // 2, :, :].sum(1)
+    r = (x > x.mean() / 10).sum() / 2
+    s = scale * 1.0 / r
+    image = cv2.resize(image, (img_height, img_width), fx=s, fy=s)
 
     """Subtract local average color"""
     image = cv2.addWeighted(image, 4, cv2.GaussianBlur(image, (0, 0), scale / 30), -4, 128)
