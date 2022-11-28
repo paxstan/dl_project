@@ -11,6 +11,8 @@ vgg_block.kernel_size = (3, 3)
 Trainer.total_steps = 1e5
 Trainer.log_interval = 1e4
 Trainer.ckpt_interval = 1e4
+Trainer.wandb_key = "8b5621f60202d49f7fa98ffafcb02ebbe4a3a314"
+Trainer.learning_rate = 0.001
 
 # Input pipeline
 #load.name = 'mnist'

@@ -15,11 +15,11 @@ def load(name, data_dir, tf_record_dir):
     if name == "idrid":
         logging.info(f"Preparing dataset {name}...")
 
-        # create_tf_records("train", data_dir, tf_record_dir)
-        # create_tf_records("test", data_dir, tf_record_dir)
-        # #
-        # tfds_builder = tfrecord_to_tfds(tf_record_dir)
-        tfds_builder = tfds.core.builder_from_directory(tf_record_dir)
+        create_tf_records("train", data_dir, tf_record_dir)
+        create_tf_records("test", data_dir, tf_record_dir)
+
+        tfds_builder = tfrecord_to_tfds(tf_record_dir)
+        # tfds_builder = tfds.core.builder_from_directory(tf_record_dir)
         ds_info = tfds_builder.info
         ds_train, ds_val, ds_test = tfds_builder.as_dataset(
             split=['train[:90%]', 'train[90%:]', 'test'],
@@ -68,6 +68,9 @@ def load(name, data_dir, tf_record_dir):
 @gin.configurable
 def prepare(ds_train, ds_val, ds_test, ds_info, batch_size, caching):
     # Prepare training dataset
+    # tt = ds_train.take(1)
+    # for image, label in tt:
+    #     preprocess(image, label, 256, 256)
     ds_train = ds_train.map(
         (lambda x, y: (preprocess(x, y, 256, 256))), num_parallel_calls=tf.data.experimental.AUTOTUNE)
     if caching:
