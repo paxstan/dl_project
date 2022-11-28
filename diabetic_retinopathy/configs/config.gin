@@ -11,10 +11,15 @@ vgg_block.kernel_size = (3, 3)
 Trainer.total_steps = 1e5
 Trainer.log_interval = 1e4
 Trainer.ckpt_interval = 1e4
+Trainer.wandb_key = "8b5621f60202d49f7fa98ffafcb02ebbe4a3a314"
+Trainer.learning_rate = 0.001
 
 # Input pipeline
-load.name = 'mnist'
-load.data_dir = '/home/data/tensorflow_datasets'
+#load.name = 'mnist'
+#load.data_dir = '/home/paxstan/tensorflow_datasets/mnist/3.0.1'
+load.name = 'idrid'
+load.data_dir = '/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/diabetic_retinopathy/Data/IDRID_dataset'
+load.tf_record_dir = '/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/diabetic_retinopathy/Data/IDRID_dataset/TfRecord'
 preprocess.img_height = 28
 preprocess.img_width = 28
 prepare.batch_size = 32

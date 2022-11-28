@@ -1,10 +1,14 @@
 import gin
 import tensorflow as tf
 import logging
+import wandb
+from wandb.keras import WandbCallback
+import numpy as np
 
 @gin.configurable
 class Trainer(object):
-    def __init__(self, model, ds_train, ds_val, ds_info, run_paths, total_steps, log_interval, ckpt_interval):
+    def __init__(self, model, ds_train, ds_val, ds_info, run_paths
+                 , total_steps, log_interval, ckpt_interval, wandb_key, learning_rate):
         # Summary Writer
         # ....
 
@@ -13,7 +17,7 @@ class Trainer(object):
 
         # Loss objective
         self.loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-        self.optimizer = tf.keras.optimizers.Adam()
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
         # Metrics
         self.train_loss = tf.keras.metrics.Mean(name='train_loss')
@@ -30,6 +34,21 @@ class Trainer(object):
         self.total_steps = total_steps
         self.log_interval = log_interval
         self.ckpt_interval = ckpt_interval
+        wandb.login(anonymous="allow", key=wandb_key)
+        # initialize wandb with your project name and optionally with configutations.
+        # play around with the config values and see the result on your wandb dashboard.
+        config = {
+            "learning_rate": learning_rate,
+            "epochs": self.total_steps,
+            "batch_size": 0,
+            "log_step": self.log_interval,
+            "val_log_step": 0,
+            "architecture": "CNN",
+            "dataset": "IDRID"
+        }
+
+        self.run = wandb.init(project='idrid-test', config=config)
+        self.config = wandb.config
 
     @tf.function
     def train_step(self, images, labels):
@@ -77,7 +96,12 @@ class Trainer(object):
                                              self.val_accuracy.result() * 100))
                 
                 # Write summary to tensorboard
-                # ...
+                # ⭐: log metrics using wandb.log
+                wandb.log({'epochs': self.total_steps,
+                           'loss': np.mean(self.train_loss.result()),
+                           'acc': float(self.train_accuracy.result()),
+                           'val_loss': np.mean(self.val_loss.result()),
+                           'val_acc': float(self.val_accuracy.result())})
 
                 # Reset train metrics
                 self.train_loss.reset_states()
@@ -95,3 +119,4 @@ class Trainer(object):
                 # Save final checkpoint
                 # ...
                 return self.val_accuracy.result().numpy()
+        self.run.finish()
