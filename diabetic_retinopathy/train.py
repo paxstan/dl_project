@@ -4,6 +4,7 @@ import logging
 import wandb
 from wandb.keras import WandbCallback
 import numpy as np
+import os
 
 @gin.configurable
 class Trainer(object):
@@ -12,8 +13,8 @@ class Trainer(object):
         # Summary Writer
         # ....
 
-        # Checkpoint Manager
-        # ...
+
+
 
         # Loss objective
         self.loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
@@ -34,6 +35,14 @@ class Trainer(object):
         self.total_steps = total_steps
         self.log_interval = log_interval
         self.ckpt_interval = ckpt_interval
+
+        # Checkpoint Manager
+        checkpoint_dir = './training_checkpoints'
+        self.checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
+        self.checkpoint = tf.train.Checkpoint(optimizer=self.optimizer, model=self.model)
+        self.checkpoint_manager = tf.train.CheckpointManager(
+            self.checkpoint, directory=self.checkpoint_prefix, max_to_keep=5)
+
         wandb.login(anonymous="allow", key=wandb_key)
         # initialize wandb with your project name and optionally with configutations.
         # play around with the config values and see the result on your wandb dashboard.
@@ -111,8 +120,7 @@ class Trainer(object):
 
             if step % self.ckpt_interval == 0:
                 logging.info(f'Saving checkpoint to {self.run_paths["path_ckpts_train"]}.')
-                # Save checkpoint
-                # ...
+                self.checkpoint_manager.save(file_prefix=self.checkpoint_prefix)
 
             if step % self.total_steps == 0:
                 logging.info(f'Finished training after {step} steps.')

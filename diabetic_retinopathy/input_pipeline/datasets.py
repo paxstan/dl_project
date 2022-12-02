@@ -7,7 +7,7 @@ import cv2
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
-from input_pipeline.preprocessing import preprocess, augment
+from input_pipeline.preprocessing import preprocess, augment, scale_radius
 
 
 @gin.configurable
@@ -15,11 +15,12 @@ def load(name, data_dir, tf_record_dir):
     if name == "idrid":
         logging.info(f"Preparing dataset {name}...")
 
-        create_tf_records("train", data_dir, tf_record_dir)
-        create_tf_records("test", data_dir, tf_record_dir)
-
-        tfds_builder = tfrecord_to_tfds(tf_record_dir)
-        # tfds_builder = tfds.core.builder_from_directory(tf_record_dir)
+        if not os.path.exists(tf_record_dir):
+            os.makedirs(tf_record_dir)
+            create_tf_records("train", data_dir, tf_record_dir)
+            create_tf_records("test", data_dir, tf_record_dir)
+            tfrecord_to_tfds(tf_record_dir)
+        tfds_builder = tfds.core.builder_from_directory(tf_record_dir)
         ds_info = tfds_builder.info
         ds_train, ds_val, ds_test = tfds_builder.as_dataset(
             split=['train[:90%]', 'train[90%:]', 'test'],
@@ -68,15 +69,15 @@ def load(name, data_dir, tf_record_dir):
 @gin.configurable
 def prepare(ds_train, ds_val, ds_test, ds_info, batch_size, caching):
     # Prepare training dataset
-    # tt = ds_train.take(1)
-    # for image, label in tt:
-    #     preprocess(image, label, 256, 256)
+    tt = ds_train.take(1)
+    for image, label in tt:
+        preprocess(image, label, 256, 256)
     ds_train = ds_train.map(
         (lambda x, y: (preprocess(x, y, 256, 256))), num_parallel_calls=tf.data.experimental.AUTOTUNE)
     if caching:
         ds_train = ds_train.cache()
     ds_train = ds_train.map(
-        (lambda x, y: augment(x, y)), num_parallel_calls=tf.data.experimental.AUTOTUNE).repeat(2)
+        (lambda x, y: augment(x, y)), num_parallel_calls=tf.data.experimental.AUTOTUNE).repeat(3)
     ds_train = ds_train.shuffle(ds_info.splits['train'].num_examples // 10)
     ds_train = ds_train.batch(batch_size)
     ds_train = ds_train.repeat(-1)
@@ -125,7 +126,7 @@ def create_tf_records(file_type, data_dir, tf_record_dir):
                 # preprocess_image, label = preprocess(tf.io.decode_image(rows['path']),
                 # rows['Retinopathy grade'], 256,256)
                 label = rows['Retinopathy grade']
-                image = cv2.imread(rows['path'])
+                image = scale_radius(cv2.imread(rows['path']))
                 png_img = cv2.imencode('.png', image)[1]
                 # np_final_image = tf.image.decode_png(png_img)
                 np_final_image = np.array(png_img)
@@ -185,7 +186,7 @@ def serialize_example(image, label):
 def tfrecord_to_tfds(path):
     features = tfds.features.FeaturesDict({
         'image':
-            tfds.features.Image(shape=(2848, 4288, 3)),
+            tfds.features.Image(shape=(256, 256, 3)),
         'label':
             tfds.features.ClassLabel(names=['0', '1', '2', '3', '4']),
     })
@@ -212,6 +213,6 @@ def tfrecord_to_tfds(path):
 
     )
 
-    builder = tfds.core.builder_from_directory(path)
-
-    return builder
+    # builder = tfds.core.builder_from_directory(path)
+    #
+    # return builder
