@@ -2,7 +2,7 @@ import gin
 import tensorflow as tf
 import logging
 import wandb
-from wandb.keras import WandbCallback
+# from wandb.keras import WandbCallback
 import numpy as np
 import os
 
