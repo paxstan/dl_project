@@ -7,8 +7,8 @@ import cv2
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
-from input_pipeline.preprocessing import preprocess, augment, scale_radius
-
+#from preprocessing import preprocess, augment, scale_radius
+from preprocessing import preprocess, augment, scale_radius
 
 @gin.configurable
 def load(name, data_dir, tf_record_dir):
@@ -71,7 +71,7 @@ def prepare(ds_train, ds_val, ds_test, ds_info, batch_size, caching):
     # Prepare training dataset
     tt = ds_train.take(1)
     for image, label in tt:
-        preprocess(image, label, 256, 256)
+        augment(image, label, 256, 256)
     ds_train = ds_train.map(
         (lambda x, y: (preprocess(x, y, 256, 256))), num_parallel_calls=tf.data.experimental.AUTOTUNE)
     if caching:

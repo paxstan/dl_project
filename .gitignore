@@ -146,3 +146,5 @@ cython_debug/
 Data/
 
 wandb/
+tfrecord/
+input_pipeline/datasets.py
