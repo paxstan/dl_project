@@ -104,7 +104,3 @@ def scale_radius(image, img_height, img_width, scale):
     s = scale * 1.0 / r
     image = cv2.resize(image, (img_height, img_width), fx=s, fy=s)
     return image
-
-# data = tf.data.Dataset.from_tensor_slices(
-#     (tf.pad(tf.ones((1, 1, 1, 2)), ((0, 0), (1, 1), (1, 1), (0, 1))), tf.ones((1, 3, 3, 1)))
-# ).map(lambda x, y: (apply_blur(x), y)).repeat().batch(10)
