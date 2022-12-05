@@ -6,11 +6,11 @@ import numpy as np
 
 
 @gin.configurable
-def preprocess(image, label, img_height, img_width, scale=300):
+def preprocess(image, img_height, img_width, scale=300):
     """Dataset preprocessing: Normalizing and resizing"""
 
     # Normalize image: `uint8` -> `float32`.
-    tf.cast(image, tf.float32)
+    #tf.cast(image, tf.float32)
 
     # image = np.array(image)
 
@@ -20,6 +20,7 @@ def preprocess(image, label, img_height, img_width, scale=300):
     # print(type(image))
     # image = numpy.array(image)
     # """Resize and Rescale images"""
+    image = scale_radius(image,img_height,img_width,scale)
     # x = tf.reduce_sum(image[image.shape[0] // 2, :, :], axis=1)
     # x_mean = tf.reduce_mean(x);
     # r = tf.reduce_sum(tf.cast(x > (x_mean / 10)), tf.float32) / 2
@@ -27,15 +28,18 @@ def preprocess(image, label, img_height, img_width, scale=300):
     # image = cv2.resize(image, (img_height, img_width), fx=s, fy=s)
     #
     # """Subtract local average color"""
-    # image = cv2.addWeighted(image, 4, cv2.GaussianBlur(image, (0, 0), scale / 30), -4, 128)
-    blur_image = gaussian_blur(image)
-    image = tensorflow_add_weighted(image, blur_image)
+    image = cv2.addWeighted(image, 4, cv2.GaussianBlur(image, (0, 0), scale / 30), -4, 128)
+    #blur_image = gaussian_blur(image)
+    #image = tensorflow_add_weighted(image, blur_image)
     #
     # """clip image to 90% to remove boundary"""
-    # # b = np.zeros(image.shape)
+    # b = np.zeros(image.shape)
+    # img_shape = tf.shape(image)
+    # b = tf.zeros(img_shape)
+
     # # cv2.circle(b, (image.shape[1] // 2, image.shape[0] // 2), int(scale * 0.9
     # image = tf.convert_to_tensor(image)
-    return image, label
+    return image
 
 
 def augment(image, label):
