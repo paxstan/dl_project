@@ -20,7 +20,8 @@ def load(name, data_dir, tf_record_dir):
             create_tf_records("train", data_dir, tf_record_dir)
             create_tf_records("test", data_dir, tf_record_dir)
             tfrecord_to_tfds(tf_record_dir)
-        tfds_builder = tfds.core.builder_from_directory(tf_record_dir)
+        tfds_builder = tfds.builder_from_directory(tf_record_dir)
+        # tfds_builder = tfds.core.builder_from_directory(tf_record_dir)
         ds_info = tfds_builder.info
         ds_train, ds_val, ds_test = tfds_builder.as_dataset(
             split=['train[:90%]', 'train[90%:]', 'test'],
@@ -129,7 +130,7 @@ def create_tf_records(file_type, data_dir, tf_record_dir):
                 # preprocess_image, label = preprocess(tf.io.decode_image(rows['path']),
                 # rows['Retinopathy grade'], 256,256)
                 label = rows['Retinopathy grade']
-                image = preprocess(cv2.imread(rows['path']), 256, 256)
+                image = preprocess(cv2.imread(rows['path']))
                 png_img = cv2.imencode('.png', image)[1]
                 # np_final_image = tf.image.decode_png(png_img)
                 np_final_image = np.array(png_img)
