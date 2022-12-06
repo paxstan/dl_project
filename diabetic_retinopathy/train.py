@@ -126,5 +126,6 @@ class Trainer(object):
                 logging.info(f'Finished training after {step} steps.')
                 # Save final checkpoint
                 # ...
+                self.checkpoint_manager.save(file_prefix=self.checkpoint_prefix)
                 return self.val_accuracy.result().numpy()
         self.run.finish()

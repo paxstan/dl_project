@@ -7,8 +7,8 @@ import cv2
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
-#from preprocessing import preprocess, augment, scale_radius
 from input_pipeline.preprocessing import preprocess, augment, scale_radius
+
 
 @gin.configurable
 def load(name, data_dir, tf_record_dir):
@@ -17,14 +17,13 @@ def load(name, data_dir, tf_record_dir):
 
         if not os.path.exists(tf_record_dir):
             os.makedirs(tf_record_dir)
-            create_tf_records("train", data_dir, tf_record_dir)
-            create_tf_records("test", data_dir, tf_record_dir)
-            tfrecord_to_tfds(tf_record_dir)
+            train_size = create_tf_records("train", data_dir, tf_record_dir)
+            test_size = create_tf_records("test", data_dir, tf_record_dir)
+            tfrecord_to_tfds(tf_record_dir, train_size, test_size)
         tfds_builder = tfds.builder_from_directory(tf_record_dir)
-        # tfds_builder = tfds.core.builder_from_directory(tf_record_dir)
         ds_info = tfds_builder.info
         ds_train, ds_val, ds_test = tfds_builder.as_dataset(
-            split=['train[:90%]', 'train[90%:]', 'test'],
+            split=['train[:80%]', 'train[20%:]', 'test'],
             shuffle_files=True,
             as_supervised=True
         )
@@ -70,11 +69,6 @@ def load(name, data_dir, tf_record_dir):
 @gin.configurable
 def prepare(ds_train, ds_val, ds_test, ds_info, batch_size, caching):
     # Prepare training dataset
-    # tt = ds_train.take(1)
-    # for image, label in tt:
-    #     augment(image, label, 256, 256)
-    # ds_train = ds_train.map(
-    #     (lambda x, y: (preprocess(x, y, 256, 256))), num_parallel_calls=tf.data.experimental.AUTOTUNE)
     if caching:
         ds_train = ds_train.cache()
     ds_train = ds_train.map(
@@ -85,11 +79,9 @@ def prepare(ds_train, ds_val, ds_test, ds_info, batch_size, caching):
     ds_train = ds_train.prefetch(tf.data.experimental.AUTOTUNE)
 
     # Prepare validation dataset
-    # ds_val = ds_val.map(
-    #     (lambda x, y: (preprocess(x, y, 256, 256))), num_parallel_calls=tf.data.experimental.AUTOTUNE)
-
     ds_val = ds_val.map(
-        (lambda x, y: tf.image.resize(x, size=(256, 256), preserve_aspect_ratio=True)), num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        (lambda x, y: (tf.image.resize(x, size=(256, 256), preserve_aspect_ratio=True), y)),
+        num_parallel_calls=tf.data.experimental.AUTOTUNE)
     ds_val = ds_val.batch(batch_size)
     if caching:
         ds_val = ds_val.cache()
@@ -97,7 +89,8 @@ def prepare(ds_train, ds_val, ds_test, ds_info, batch_size, caching):
 
     # Prepare test dataset
     ds_test = ds_test.map(
-        (lambda x, y: tf.image.resize(x, size=(256, 256), preserve_aspect_ratio=True)), num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        (lambda x, y: (tf.image.resize(x, size=(256, 256), preserve_aspect_ratio=True), y)),
+        num_parallel_calls=tf.data.experimental.AUTOTUNE)
     ds_test = ds_test.batch(batch_size)
     if caching:
         ds_test = ds_test.cache()
@@ -117,37 +110,32 @@ def rawdata_to_df(data_dir, file_type, fields):
     return data_frame
 
 
+def balance_data(class_size, df):
+    new_df = df.groupby(['Retinopathy grade']).apply(lambda x: x.sample(class_size, replace=True)).reset_index(
+        drop=True)
+    new_df = new_df.sample(frac=1).reset_index(drop=True)
+    print('New Data Size:', new_df.shape[0], 'Old Size:', df.shape[0])
+    new_df['Retinopathy grade'].hist(figsize=(10, 5))
+    return new_df
+
+
 def create_tf_records(file_type, data_dir, tf_record_dir):
     fields = ['Image name', 'Retinopathy grade']
-    # path_csv = os.path.join(dataset_dir, "labels", '{}.csv'.format(file_type))
     path_tf_record = os.path.join(tf_record_dir, 'idrid-{}.tfrecord-00000-of-00001'
                                   .format(file_type))
     dataframe = rawdata_to_df(data_dir, file_type, fields)
-    if file_type == "train":
-        with tf.io.TFRecordWriter(path_tf_record) as writer:
-            for index, rows in dataframe.iterrows():
-                print(rows['Image name'])
-                # preprocess_image, label = preprocess(tf.io.decode_image(rows['path']),
-                # rows['Retinopathy grade'], 256,256)
-                label = rows['Retinopathy grade']
-                image = preprocess(cv2.imread(rows['path']))
-                png_img = cv2.imencode('.png', image)[1]
-                # np_final_image = tf.image.decode_png(png_img)
-                np_final_image = np.array(png_img)
-
-                writer.write(serialize_example(
-                    np_final_image.tobytes(),
-                    label))
-
-    else:
-        with tf.io.TFRecordWriter(path_tf_record) as writer:
-            for index, rows in dataframe.iterrows():
-                print(rows['Image name'])
-                image = cv2.imread(rows['path'])
-                writer.write(serialize_example(
-                    image.tobytes(),
-                    rows['Retinopathy grade']))
-    return path_tf_record, dataframe.shape[0]
+    dataframe = balance_data(dataframe.pivot_table(index='Retinopathy grade', aggfunc=len).max().max(), dataframe)
+    with tf.io.TFRecordWriter(path_tf_record) as writer:
+        for index, rows in dataframe.iterrows():
+            print(rows['Image name'])
+            label = 0 if (int(rows['Retinopathy grade']) < 2) else 1
+            image = preprocess(cv2.imread(rows['path']))
+            png_img = cv2.imencode('.png', image)[1]
+            np_final_image = np.array(png_img)
+            writer.write(serialize_example(
+                np_final_image.tobytes(),
+                label))
+    return dataframe.shape[0]
 
 
 # The following functions can be used to convert a value to a type compatible
@@ -187,23 +175,23 @@ def serialize_example(image, label):
     return example_proto.SerializeToString()
 
 
-def tfrecord_to_tfds(path):
+def tfrecord_to_tfds(path, train_size, test_size):
     features = tfds.features.FeaturesDict({
         'image':
             tfds.features.Image(shape=(256, 256, 3)),
         'label':
-            tfds.features.ClassLabel(names=['0', '1', '2', '3', '4']),
+            tfds.features.ClassLabel(names=['0', '1']),
     })
 
     split_infos = [
         tfds.core.SplitInfo(
             name='train',
-            shard_lengths=[413],  # Num of examples in shard0, shard1,...
+            shard_lengths=[train_size],  # Num of examples in shard0, shard1,...
             num_bytes=0,  # Total size of your dataset (if unknown, set to 0)
         ),
         tfds.core.SplitInfo(
             name='test',
-            shard_lengths=[103],  # Num of examples in shard0, shard1,...
+            shard_lengths=[test_size],  # Num of examples in shard0, shard1,...
             num_bytes=0,  # Total size of your dataset (if unknown, set to 0)
         ),
     ]
@@ -216,7 +204,3 @@ def tfrecord_to_tfds(path):
         supervised_keys=('image', 'label')
 
     )
-
-    # builder = tfds.core.builder_from_directory(path)
-    #
-    # return builder
