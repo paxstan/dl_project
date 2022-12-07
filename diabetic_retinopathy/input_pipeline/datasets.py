@@ -28,7 +28,7 @@ def load(name, data_dir, tf_record_dir):
             as_supervised=True
         )
 
-        return prepare(ds_train, ds_val, ds_test, ds_info, 50, True)
+        return prepare(ds_train, ds_val, ds_test, ds_info)
 
     elif name == "eyepacs":
         logging.info(f"Preparing dataset {name}...")
