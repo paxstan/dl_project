@@ -69,11 +69,11 @@ def load(name, data_dir, tf_record_dir):
 @gin.configurable
 def prepare(ds_train, ds_val, ds_test, ds_info, batch_size, caching):
     # Prepare training dataset
+    ds_train = ds_train.shuffle(ds_info.splits['train'].num_examples // 10)
+    ds_train = ds_train.map(
+        (lambda x, y: augment(x, y)), num_parallel_calls=tf.data.experimental.AUTOTUNE)
     if caching:
         ds_train = ds_train.cache()
-    ds_train = ds_train.map(
-        (lambda x, y: augment(x, y)), num_parallel_calls=tf.data.experimental.AUTOTUNE).repeat(3)
-    ds_train = ds_train.shuffle(ds_info.splits['train'].num_examples // 10)
     ds_train = ds_train.batch(batch_size)
     ds_train = ds_train.repeat(-1)
     ds_train = ds_train.prefetch(tf.data.experimental.AUTOTUNE)
@@ -82,18 +82,18 @@ def prepare(ds_train, ds_val, ds_test, ds_info, batch_size, caching):
     ds_val = ds_val.map(
         (lambda x, y: (tf.image.resize(x, size=(256, 256), preserve_aspect_ratio=True), y)),
         num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    ds_val = ds_val.batch(batch_size)
     if caching:
         ds_val = ds_val.cache()
+    ds_val = ds_val.batch(batch_size)
     ds_val = ds_val.prefetch(tf.data.experimental.AUTOTUNE)
 
     # Prepare test dataset
     ds_test = ds_test.map(
         (lambda x, y: (tf.image.resize(x, size=(256, 256), preserve_aspect_ratio=True), y)),
         num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    ds_test = ds_test.batch(batch_size)
     if caching:
         ds_test = ds_test.cache()
+    ds_test = ds_test.batch(batch_size)
     ds_test = ds_test.prefetch(tf.data.experimental.AUTOTUNE)
 
     return ds_train, ds_val, ds_test, ds_info
