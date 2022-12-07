@@ -2,31 +2,15 @@ import gin
 import tensorflow as tf
 import logging
 import wandb
-# from wandb.keras import WandbCallback
+from wandb.keras import WandbCallback
 import numpy as np
 import os
 
 @gin.configurable
 class Trainer(object):
     def __init__(self, model, ds_train, ds_val, ds_info, run_paths
-                 , total_steps, log_interval, ckpt_interval, wandb_key, learning_rate):
+                 , total_steps, log_interval, ckpt_interval, learning_rate, batch_size, wandb_key):
         # Summary Writer
-        # ....
-
-
-
-
-        # Loss objective
-        self.loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-
-        # Metrics
-        self.train_loss = tf.keras.metrics.Mean(name='train_loss')
-        self.train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
-
-        self.val_loss = tf.keras.metrics.Mean(name='val_loss')
-        self.val_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='val_accuracy')
-
         self.model = model
         self.ds_train = ds_train
         self.ds_val = ds_val
@@ -35,6 +19,20 @@ class Trainer(object):
         self.total_steps = total_steps
         self.log_interval = log_interval
         self.ckpt_interval = ckpt_interval
+        self.learning_rate = learning_rate
+        self.wandb_key = wandb_key
+        self.batch_size = batch_size
+
+        # Loss objective
+        self.loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
+
+        # Metrics
+        self.train_loss = tf.keras.metrics.Mean(name='train_loss')
+        self.train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
+
+        self.val_loss = tf.keras.metrics.Mean(name='val_loss')
+        self.val_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='val_accuracy')
 
         # Checkpoint Manager
         checkpoint_dir = './training_checkpoints'
@@ -42,22 +40,6 @@ class Trainer(object):
         self.checkpoint = tf.train.Checkpoint(optimizer=self.optimizer, model=self.model)
         self.checkpoint_manager = tf.train.CheckpointManager(
             self.checkpoint, directory=self.checkpoint_prefix, max_to_keep=5)
-
-        wandb.login(anonymous="allow", key=wandb_key)
-        # initialize wandb with your project name and optionally with configutations.
-        # play around with the config values and see the result on your wandb dashboard.
-        config = {
-            "learning_rate": learning_rate,
-            "epochs": self.total_steps,
-            "batch_size": 0,
-            "log_step": self.log_interval,
-            "val_log_step": 0,
-            "architecture": "CNN",
-            "dataset": "IDRID"
-        }
-
-        self.run = wandb.init(project='idrid-test', config=config)
-        self.config = wandb.config
 
     @tf.function
     def train_step(self, images, labels):
@@ -106,26 +88,30 @@ class Trainer(object):
                 
                 # Write summary to tensorboard
                 # ⭐: log metrics using wandb.log
-                wandb.log({'epochs': self.total_steps,
-                           'loss': np.mean(self.train_loss.result()),
-                           'acc': float(self.train_accuracy.result()),
-                           'val_loss': np.mean(self.val_loss.result()),
-                           'val_acc': float(self.val_accuracy.result())})
+                log = {'loss': np.mean(self.train_loss.result()),
+                       'acc': float(self.train_accuracy.result()),
+                       'val_loss': np.mean(self.val_loss.result()),
+                       'val_acc': float(self.val_accuracy.result()),
+                       'step': step}
 
                 # Reset train metrics
                 self.train_loss.reset_states()
                 self.train_accuracy.reset_states()
 
-                yield self.val_accuracy.result().numpy()
+                yield log
 
             if step % self.ckpt_interval == 0:
                 logging.info(f'Saving checkpoint to {self.run_paths["path_ckpts_train"]}.')
-                self.checkpoint_manager.save(file_prefix=self.checkpoint_prefix)
+                self.checkpoint_manager.save()
 
             if step % self.total_steps == 0:
                 logging.info(f'Finished training after {step} steps.')
                 # Save final checkpoint
                 # ...
-                self.checkpoint_manager.save(file_prefix=self.checkpoint_prefix)
-                return self.val_accuracy.result().numpy()
-        self.run.finish()
+                self.checkpoint_manager.save()
+                log = {'loss': np.mean(self.train_loss.result()),
+                       'acc': float(self.train_accuracy.result()),
+                       'val_loss': np.mean(self.val_loss.result()),
+                       'val_acc': float(self.val_accuracy.result()),
+                       'step': step}
+                return log
