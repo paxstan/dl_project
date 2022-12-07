@@ -35,8 +35,9 @@ class Trainer(object):
         self.val_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='val_accuracy')
 
         # Checkpoint Manager
-        checkpoint_dir = './training_checkpoints'
-        self.checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
+        # checkpoint_dir = './training_checkpoints'
+        # self.checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
+        self.checkpoint_prefix = run_paths['path_ckpts_train']
         self.checkpoint = tf.train.Checkpoint(optimizer=self.optimizer, model=self.model)
         self.checkpoint_manager = tf.train.CheckpointManager(
             self.checkpoint, directory=self.checkpoint_prefix, max_to_keep=5)
