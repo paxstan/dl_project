@@ -1,6 +1,7 @@
 import gin
 import logging
 from absl import app, flags
+import wandb
 
 from train import Trainer
 from evaluation.eval import evaluate
@@ -23,6 +24,9 @@ def main(argv):
     gin.parse_config_files_and_bindings(['configs/config.gin'], [])
     utils_params.save_config(run_paths['path_gin'], gin.config_str())
 
+    # initialize wandb with your project name and optionally with configutations.
+    # play around with the config values and see the result on your wandb dashboard.
+
     # setup pipeline
     ds_train, ds_val, ds_test, ds_info = datasets.load()
 
@@ -31,8 +35,22 @@ def main(argv):
 
     if FLAGS.train:
         trainer = Trainer(model, ds_train, ds_val, ds_info, run_paths)
-        for _ in trainer.train():
+        config = {
+            "learning_rate": trainer.learning_rate,
+            "epochs": trainer.total_steps,
+            "batch_size": trainer.batch_size,
+            "log_step": trainer.log_interval,
+            "val_log_step": 0,
+            "architecture": "CNN",
+            "dataset": "IDRID"
+        }
+        wandb.login(anonymous="allow", key=trainer.wandb_key)
+        run = wandb.init(project='idrid-test', config=config)
+        config = wandb.config
+        for log in trainer.train():
+            wandb.log(log)
             continue
+        run.finish()
     else:
         evaluate(model,
                  checkpoint,
