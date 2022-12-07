@@ -6,7 +6,7 @@ import numpy as np
 
 
 @gin.configurable
-def preprocess(image, img_height, img_width, scale=102):
+def preprocess(image, img_height, img_width, scale):
     """Dataset preprocessing: Normalizing and resizing"""
     image = cv2.resize(image, (256, 256))
     # scale = 102  # shape(256,256,3)
@@ -25,6 +25,7 @@ def preprocess(image, img_height, img_width, scale=102):
     b = np.zeros(image.shape)
     cv2.circle(b, (image.shape[1] // 2, image.shape[0] // 2), int(scale * 0.9), (1, 1, 1), -1, 8, 0)
     image = image * b + 128 * (1 - b)
+    image = cv2.resize(image, (256, 256))
 
     return image
 
