@@ -6,39 +6,26 @@ import numpy as np
 
 
 @gin.configurable
-def preprocess(image, img_height, img_width, scale=300):
+def preprocess(image, img_height, img_width, scale=102):
     """Dataset preprocessing: Normalizing and resizing"""
+    image = cv2.resize(image, (256, 256))
+    # scale = 102  # shape(256,256,3)
+    # s c a l e img t o a gi v e n r a di u s
 
-    # Normalize image: `uint8` -> `float32`.
-    #tf.cast(image, tf.float32)
+    x = image[image.shape[0] // 2, :, :].sum(1)
+    r = (x > x.mean() / 10).sum() / 2
+    s = scale * 1.0 / r
+    image_radius = cv2.resize(image, (0, 0), fx=s, fy=s)
+    image = image_radius
 
-    # image = np.array(image)
-
-    # Resize image
-    # image = tf.image.resize(image, size=(img_height, img_width), preserve_aspect_ratio=True)
-    # print(image)
-    # print(type(image))
-    # image = numpy.array(image)
-    # """Resize and Rescale images"""
-    image = scale_radius(image,img_height,img_width,scale)
-    # x = tf.reduce_sum(image[image.shape[0] // 2, :, :], axis=1)
-    # x_mean = tf.reduce_mean(x);
-    # r = tf.reduce_sum(tf.cast(x > (x_mean / 10)), tf.float32) / 2
-    # s = scale * 1.0 / r
-    # image = cv2.resize(image, (img_height, img_width), fx=s, fy=s)
-    #
-    # """Subtract local average color"""
+    # s u b t r a c t l o c a l mean c o l o r
     image = cv2.addWeighted(image, 4, cv2.GaussianBlur(image, (0, 0), scale / 30), -4, 128)
-    #blur_image = gaussian_blur(image)
-    #image = tensorflow_add_weighted(image, blur_image)
-    #
-    # """clip image to 90% to remove boundary"""
-    # b = np.zeros(image.shape)
-    # img_shape = tf.shape(image)
-    # b = tf.zeros(img_shape)
 
-    # # cv2.circle(b, (image.shape[1] // 2, image.shape[0] // 2), int(scale * 0.9
-    # image = tf.convert_to_tensor(image)
+    # remove o u t e r 10%
+    b = np.zeros(image.shape)
+    cv2.circle(b, (image.shape[1] // 2, image.shape[0] // 2), int(scale * 0.9), (1, 1, 1), -1, 8, 0)
+    image = image * b + 128 * (1 - b)
+
     return image
 
 
@@ -96,6 +83,7 @@ def gaussian_blur(img, ksize=5, sigma=1):
     b_blur = tf.nn.conv2d(b, kernel, [1, 1, 1, 1], 'SAME')
     blur_image = tf.concat([r_blur, g_blur, b_blur], axis=-1)
     return tf.squeeze(blur_image, axis=0)
+
 
 @gin.configurable
 def scale_radius(image, img_height, img_width, scale):
