@@ -68,6 +68,9 @@ class Trainer(object):
         for idx, (images, labels) in enumerate(self.ds_train):
 
             step = idx + 1
+            print(step, images.shape)
+            if images.shape[1] != 256 | images.shape[2] != 256:
+                print("wrong")
             self.train_step(images, labels)
 
             if step % self.log_interval == 0:
