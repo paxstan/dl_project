@@ -3,7 +3,6 @@ import tensorflow as tf
 from models.layers import vgg_block
 
 
-
 @gin.configurable
 def vgg_like(input_shape, n_classes, base_filters, n_blocks, dense_units, dropout_rate):
     """Defines a VGG-like architecture.
@@ -65,6 +64,25 @@ def xception_model(input_shape, n_classes, dense_units, dropout_rate):
                                                 input_shape=input_shape,
                                                 include_top=False,
                                                 )
+    base_model.trainable = False
+
+    inputs = tf.keras.Input(input_shape)
+
+    out = base_model(inputs, training=False)
+
+    out = tf.keras.layers.GlobalAveragePooling2D()(out)
+    out = tf.keras.layers.Dense(dense_units, activation=tf.nn.relu)(out)
+    out = tf.keras.layers.Dropout(dropout_rate)(out)
+    outputs = tf.keras.layers.Dense(n_classes)(out)
+
+    return tf.keras.Model(inputs=inputs, outputs=outputs)
+
+@gin.configurable
+def res_net50_model(input_shape, n_classes, dense_units, dropout_rate):
+    base_model = tf.keras.applications.resnet50.ResNet50(include_top=False,
+                                                         weights='imagenet',
+                                                         input_shape=input_shape,
+                                                         )
     base_model.trainable = False
 
     inputs = tf.keras.Input(input_shape)
