@@ -49,3 +49,16 @@ def dense_net_model(input_shape, n_classes):
                                                      classes=n_classes,
                                                      classifier_activation='softmax')
     return out
+
+
+def res_net_model(input_shape, n_classes):
+    inputs = tf.keras.Input(input_shape)
+    out = tf.keras.applications.resnet.ResNet101(include_top=False,
+                                                 weights=None,
+                                                 input_tensor=inputs,
+                                                 input_shape=input_shape,
+                                                 pooling='avg',
+                                                 classes=n_classes,
+                                                 classifier_activation='softmax'
+                                                 )
+    return out
