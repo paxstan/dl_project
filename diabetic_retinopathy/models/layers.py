@@ -1,6 +1,8 @@
 import gin
 import tensorflow as tf
 
+
+
 @gin.configurable
 def vgg_block(inputs, filters, kernel_size):
     """A single VGG block consisting of two convolutional layers, followed by a max-pooling layer.
@@ -19,3 +21,6 @@ def vgg_block(inputs, filters, kernel_size):
     out = tf.keras.layers.MaxPool2D((2, 2))(out)
 
     return out
+
+
+
