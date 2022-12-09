@@ -23,6 +23,11 @@ class Evaluation(object):
         self.epoch = 0
         self.confusion_matrix = None
         self.confusion_metrics = ConfusionMatrix()
+        self.checkpoint_prefix = self.run_paths["path_ckpts_train"]
+        self.checkpoint = tf.train.Checkpoint(model=self.model)
+        self.checkpoint_manager = tf.train.CheckpointManager(
+            self.checkpoint, directory=self.checkpoint_prefix, max_to_keep=5)
+
         # self.loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
         # self.test_loss = tf.keras.metrics.Mean(name='test_loss')
         # self.test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='test_accuracy')
@@ -36,8 +41,13 @@ class Evaluation(object):
         self.confusion_metrics.update_state(predictions, labels, self.epoch)
 
     def evaluate(self):
-        for test_images, test_labels in self.ds_test:
-            self.epoch += 1
-            self.test_step(test_images, test_labels, self.ds_info.features["label"].num_classes)
+        self.checkpoint.restore(self.checkpoint_manager.latest_checkpoint)
+        if self.checkpoint_manager.latest_checkpoint:
+            print("Restored from {}".format(self.checkpoint_manager.latest_checkpoint))
+            for test_images, test_labels in self.ds_test:
+                self.epoch += 1
+                self.test_step(test_images, test_labels, self.ds_info.features["label"].num_classes)
+        else:
+            print("No model loaded.")
         return self.confusion_matrix
 
