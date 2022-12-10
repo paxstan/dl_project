@@ -8,7 +8,7 @@ from evaluation.eval import evaluate
 from input_pipeline import datasets
 from utils import utils_params, utils_misc
 from models.architectures import vgg_like, dense_net121_model, res_net101_model, xception_model, res_net50_model, nas_net
-
+from models.architectures import efficient_netB4_model
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean('train', True, 'Specify whether to train or evaluate a model.')
 
@@ -32,12 +32,13 @@ def main(argv):
 
     # model
     # model = vgg_like(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
-    model = dense_net121_model(input_shape=ds_info.features["image"].shape,n_classes=ds_info.features["label"].num_classes)
+    #model = dense_net121_model(input_shape=ds_info.features["image"].shape,n_classes=ds_info.features["label"].num_classes)
     #model = res_net101_model(input_shape=ds_info.features["image"].shape,
       #                       n_classes=ds_info.features["label"].num_classes)
     # model = xception_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
     # model = res_net50_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
     # model = nas_net(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
+    model = efficient_netB4_model(input_shape=ds_info.features["image"].shape,n_classes=ds_info.features["label"].num_classes)
 
     if FLAGS.train:
         trainer = Trainer(model, ds_train, ds_val, ds_info, run_paths)
