@@ -25,7 +25,7 @@ class ConfusionMatrix(tf.keras.metrics.Metric):
     def result(self):
         return self.confusion_matrix
 
-    def reset_states(self):
+    def reset_state(self):
         # The state of the metric will be reset at the start of each epoch.
         self.confusion_matrix = None
 

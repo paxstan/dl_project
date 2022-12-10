@@ -53,6 +53,7 @@ class Evaluation(object):
             print("Restored from {}".format(self.checkpoint_manager.latest_checkpoint))
             for test_images, test_labels in self.ds_test:
                 self.epoch += 1
+                self.confusion_metrics.reset_state()
                 self.test_loss.reset_states()
                 self.test_accuracy.reset_states()
                 self.true_positive.reset_state()
