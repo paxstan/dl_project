@@ -32,9 +32,9 @@ def main(argv):
 
     # model
     # model = vgg_like(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
-    # model = dense_net121_model(input_shape=ds_info.features["image"].shape,n_classes=ds_info.features["label"].num_classes)
-    model = res_net101_model(input_shape=ds_info.features["image"].shape,
-                             n_classes=ds_info.features["label"].num_classes)
+    model = dense_net121_model(input_shape=ds_info.features["image"].shape,n_classes=ds_info.features["label"].num_classes)
+    #model = res_net101_model(input_shape=ds_info.features["image"].shape,
+      #                       n_classes=ds_info.features["label"].num_classes)
     # model = xception_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
     # model = res_net50_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
     # model = nas_net(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
