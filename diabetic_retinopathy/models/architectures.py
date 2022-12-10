@@ -33,29 +33,40 @@ def vgg_like(input_shape, n_classes, base_filters, n_blocks, dense_units, dropou
     return tf.keras.Model(inputs=inputs, outputs=outputs, name='vgg_like')
 
 
-def dense_net_model(input_shape, n_classes):
+def dense_net121_model(input_shape, n_classes, dense_units=32, dropout_rate=0.2):
+    base_model = tf.keras.applications.densenet.DenseNet121(include_top=False,
+                                                            weights='imagenet',
+                                                            input_shape=input_shape, )
+    base_model.trainable = False
+
     inputs = tf.keras.Input(input_shape)
-    out = tf.keras.applications.densenet.DenseNet121(include_top=False,
-                                                     weights=None,
-                                                     input_tensor=inputs,
-                                                     input_shape=(256, 256, 3),
-                                                     pooling='avg',
-                                                     classes=n_classes,
-                                                     classifier_activation='softmax')
-    return out
+
+    out = base_model(inputs, training=False)
+
+    out = tf.keras.layers.GlobalAveragePooling2D()(out)
+    out = tf.keras.layers.Dense(dense_units, activation=tf.nn.softmax)(out)
+    out = tf.keras.layers.Dropout(dropout_rate)(out)
+    outputs = tf.keras.layers.Dense(n_classes)(out)
+
+    return tf.keras.Model(inputs=inputs, outputs=outputs)
 
 
-def res_net_model(input_shape, n_classes):
+def res_net101_model(input_shape, n_classes, dense_units=32, dropout_rate=0.2):
+    base_model = tf.keras.applications.resnet.ResNet101(include_top=False,
+                                                        weights='imagenet',
+                                                        input_shape=input_shape, )
+    base_model.trainable = False
+
     inputs = tf.keras.Input(input_shape)
-    out = tf.keras.applications.resnet.ResNet101(include_top=False,
-                                                 weights=None,
-                                                 input_tensor=inputs,
-                                                 input_shape=input_shape,
-                                                 pooling='avg',
-                                                 classes=n_classes,
-                                                 classifier_activation='softmax'
-                                                 )
-    return out
+
+    out = base_model(inputs, training=False)
+
+    out = tf.keras.layers.GlobalAveragePooling2D()(out)
+    out = tf.keras.layers.Dense(dense_units, activation=tf.nn.softmax)(out)
+    out = tf.keras.layers.Dropout(dropout_rate)(out)
+    outputs = tf.keras.layers.Dense(n_classes)(out)
+
+    return tf.keras.Model(inputs=inputs, outputs=outputs)
 
 
 @gin.configurable
@@ -97,11 +108,12 @@ def res_net50_model(input_shape, n_classes, dense_units, dropout_rate):
 
     return tf.keras.Model(inputs=inputs, outputs=outputs)
 
+
 @gin.configurable
 def nas_net(input_shape, n_classes, dense_units=32, dropout_rate=0.2):
     base_model = tf.keras.applications.nasnet.NASNetMobile(include_top=False,
                                                            weights='imagenet',
-                                                           input_shape=input_shape,)
+                                                           input_shape=input_shape, )
     base_model.trainable = False
 
     inputs = tf.keras.Input(input_shape)
@@ -157,6 +169,3 @@ def ResNet50(input_shape, n_classes, dense_units=32, dropout_rate=0.2):
     model = tf.keras.Model(inputs=X_input, outputs=X)
 
     return model
-
-
-

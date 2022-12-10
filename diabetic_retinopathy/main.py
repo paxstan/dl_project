@@ -7,7 +7,7 @@ from train import Trainer
 from evaluation.eval import evaluate
 from input_pipeline import datasets
 from utils import utils_params, utils_misc
-from models.architectures import vgg_like, dense_net_model, res_net_model, xception_model, res_net50_model,nas_net
+from models.architectures import vgg_like, dense_net121_model, res_net101_model, xception_model, res_net50_model, nas_net
 
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean('train', True, 'Specify whether to train or evaluate a model.')
@@ -31,14 +31,13 @@ def main(argv):
     ds_train, ds_val, ds_test, ds_info = datasets.load()
 
     # model
-    model = vgg_like(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
-    # model = dense_net_model(input_shape=ds_info.features["image"].shape,
-    #                         n_classes=ds_info.features["label"].num_classes)
-    # model = res_net_model(input_shape=ds_info.features["image"].shape,
-    #                        n_classes=ds_info.features["label"].num_classes)
-    #model = xception_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
-    #model = res_net50_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
-    #model = nas_net(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
+    # model = vgg_like(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
+    # model = dense_net121_model(input_shape=ds_info.features["image"].shape,n_classes=ds_info.features["label"].num_classes)
+    model = res_net101_model(input_shape=ds_info.features["image"].shape,
+                             n_classes=ds_info.features["label"].num_classes)
+    # model = xception_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
+    # model = res_net50_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
+    # model = nas_net(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
 
     if FLAGS.train:
         trainer = Trainer(model, ds_train, ds_val, ds_info, run_paths)
