@@ -31,14 +31,14 @@ def main(argv):
     ds_train, ds_val, ds_test, ds_info = datasets.load()
 
     # model
-    # model = vgg_like(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
+    model = vgg_like(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
     # model = dense_net_model(input_shape=ds_info.features["image"].shape,
     #                         n_classes=ds_info.features["label"].num_classes)
     # model = res_net_model(input_shape=ds_info.features["image"].shape,
     #                        n_classes=ds_info.features["label"].num_classes)
     #model = xception_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
     #model = res_net50_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
-    model = nas_net(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
+    #model = nas_net(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
 
     if FLAGS.train:
         trainer = Trainer(model, ds_train, ds_val, ds_info, run_paths)
