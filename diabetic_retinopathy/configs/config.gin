@@ -3,8 +3,6 @@ vgg_like.base_filters = 8
 vgg_like.n_blocks = 3
 vgg_like.dense_units = 32
 vgg_like.dropout_rate = 0.2
-xception_model.dense_units = 32
-xception_model.dropout_rate = 0.2
 res_net50_model.dense_units = 32
 res_net50_model.dropout_rate = 0.2
 
