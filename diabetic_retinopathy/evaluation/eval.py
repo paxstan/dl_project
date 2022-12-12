@@ -48,8 +48,10 @@ class Evaluation(object):
         self.true_positive.update_state(y_pred, labels)
 
     def evaluate(self):
-        self.checkpoint.restore(self.checkpoint_manager.latest_checkpoint).expect_partial()
-        if self.checkpoint_manager.latest_checkpoint:
+        # self.checkpoint.restore(self.checkpoint_manager.latest_checkpoint).expect_partial()
+        self.model.load(self.run_paths["path_model_train"])
+        # if self.checkpoint_manager.latest_checkpoint:
+        if True:
             print("Restored from {}".format(self.checkpoint_manager.latest_checkpoint))
             for test_images, test_labels in self.ds_test:
                 self.epoch += 1
