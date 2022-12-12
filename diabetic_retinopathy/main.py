@@ -1,21 +1,27 @@
 import gin
 import logging
+
+import numpy as np
 from absl import app, flags
-import wandb
+import argparse
 
 from train import Trainer
-from evaluation.eval import evaluate
+from evaluation.eval import Evaluation
+# from evaluation.eval import evaluate
 from input_pipeline import datasets
 from utils import utils_params, utils_misc
-from models.architectures import vgg_like, dense_net121_model, res_net101_model, xception_model, res_net50_model, nas_net
-from models.architectures import efficient_netB4_model, inceptionv3_model,inception_resnetv2_model
+from models.architectures import vgg_like, efficient_netB4_model
+from visualization.gradcam import GradCam
+import matplotlib.pyplot as plt
+
 FLAGS = flags.FLAGS
-flags.DEFINE_boolean('train', True, 'Specify whether to train or evaluate a model.')
+flags.DEFINE_boolean('train', False, 'Specify whether to train or evaluate a model.')
+flags.DEFINE_string('runId', "", 'Specify whether to train or evaluate a model.')
 
 
 def main(argv):
     # generate folder structures
-    run_paths = utils_params.gen_run_folder()
+    run_paths = utils_params.gen_run_folder(FLAGS.runId)
 
     # set loggers
     utils_misc.set_loggers(run_paths['path_logs_train'], logging.INFO)
@@ -24,49 +30,35 @@ def main(argv):
     gin.parse_config_files_and_bindings(['configs/config.gin'], [])
     utils_params.save_config(run_paths['path_gin'], gin.config_str())
 
-    # initialize wandb with your project name and optionally with configutations.
+    # initialize wandb with your project name and optionally with configurations.
     # play around with the config values and see the result on your wandb dashboard.
 
     # setup pipeline
     ds_train, ds_val, ds_test, ds_info = datasets.load()
 
     # model
-    # model = vgg_like(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
-    #model = dense_net121_model(input_shape=ds_info.features["image"].shape,n_classes=ds_info.features["label"].num_classes)
-    #model = res_net101_model(input_shape=ds_info.features["image"].shape,
-      #                       n_classes=ds_info.features["label"].num_classes)
-    # model = xception_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
-    # model = res_net50_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
-    # model = nas_net(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
-    #model = efficient_netB4_model(input_shape=ds_info.features["image"].shape,n_classes=ds_info.features["label"].num_classes)
-    # model = inceptionv3_model(input_shape=ds_info.features["image"].shape,
-    #                               n_classes=ds_info.features["label"].num_classes)
-    model = inception_resnetv2_model(input_shape=ds_info.features["image"].shape,
-                              n_classes=ds_info.features["label"].num_classes)
+    model = efficient_netB4_model(input_shape=ds_info.features["image"].shape,
+                                  n_classes=ds_info.features["label"].num_classes)
+
     if FLAGS.train:
         trainer = Trainer(model, ds_train, ds_val, ds_info, run_paths)
-        config = {
-            "learning_rate": trainer.learning_rate,
-            "epochs": trainer.total_steps,
-            "batch_size": trainer.batch_size,
-            "log_step": trainer.log_interval,
-            "val_log_step": 0,
-            "architecture": "CNN",
-            "dataset": "IDRID"
-        }
-        wandb.login(anonymous="allow", key=trainer.wandb_key)
-        run = wandb.init(project='idrid-test', config=config)
-        config = wandb.config
-        for log in trainer.train():
-            wandb.log(log)
-            continue
-        run.finish()
+        trainer.train_and_checkpoint()
     else:
-        evaluate(model,
-                 checkpoint,
-                 ds_test,
-                 ds_info,
-                 run_paths)
+        evaluation = Evaluation(model, ds_test, ds_info, run_paths)
+        evaluation.evaluate()
+        image_path = '/home/paxstan/Documents/Uni/DL Lab/idrid/IDRID_dataset/images/test/IDRiD_001.jpg'
+        grad_cam = GradCam(model=evaluation.model)
+        img_array = grad_cam.get_img_array(image_path)
+        predict = evaluation.model.predict(img_array)
+        print('predicted class: ', np.argmax(predict))
+        heatmap = grad_cam.make_gradcam_heatmap(img_array=img_array, last_conv_layer_name='max_pooling2d_1')
+
+        # Display heatmap
+        plt.matshow(heatmap)
+        plt.show()
+        grad_cam.save_and_display_gradcam(img_path=image_path,
+                                          heatmap=heatmap,
+                                          cam_path='/home/paxstan/Documents/Uni/DL_Lab/gradcam_result/IDRiD_001.jpg')
 
 
 if __name__ == "__main__":
