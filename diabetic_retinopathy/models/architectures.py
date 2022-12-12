@@ -37,7 +37,7 @@ def vgg_like(input_shape, n_classes, base_filters, n_blocks, dense_units, dropou
 def res_net50_model(input_shape, n_classes, dense_units, dropout_rate):
     base_model = tf.keras.applications.resnet50.ResNet50(include_top=False,
                                                          weights='imagenet',
-                                                         input_shape=input_shape,
+                                                         input_shape=input_shape
                                                          )
     base_model.trainable = False
 
@@ -56,7 +56,7 @@ def res_net50_model(input_shape, n_classes, dense_units, dropout_rate):
 def efficient_netB4_model(input_shape, n_classes, dense_units=32, dropout_rate=0.2):
     base_model = tf.keras.applications.efficientnet.EfficientNetB4(include_top=False,
                                                                    weights='imagenet',
-                                                                   input_shape=input_shape, )
+                                                                   input_shape=input_shape)
     base_model.trainable = False
 
     inputs = tf.keras.Input(input_shape)
@@ -74,7 +74,7 @@ def efficient_netB4_model(input_shape, n_classes, dense_units=32, dropout_rate=0
 def inception_resnetv2_model(input_shape, n_classes, dense_units=32, dropout_rate=0.2):
     base_model = tf.keras.applications.inception_resnet_v2.InceptionResNetV2(include_top=False,
                                                                              weights='imagenet',
-                                                                             input_shape=input_shape, )
+                                                                             input_shape=input_shape)
     base_model.trainable = False
 
     inputs = tf.keras.Input(input_shape)
