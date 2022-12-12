@@ -1,6 +1,6 @@
 import gin
 import tensorflow as tf
-from models.layers import vgg_block, identity_block, convolutional_block
+from models.layers import vgg_block
 
 
 @gin.configurable
@@ -145,45 +145,23 @@ def efficient_netB4_model(input_shape, n_classes, dense_units=32, dropout_rate=0
 
     return tf.keras.Model(inputs=inputs, outputs=outputs)
 
+def inceptionv3_model(input_shape, n_classes, dense_units=32, dropout_rate=0.2):
+    base_model = tf.keras.applications.inception_v3.InceptionV3(include_top=False,
+                                                            weights='imagenet',
+                                                            input_shape=input_shape, )
+    base_model.trainable = False
 
-def ResNet50(input_shape, n_classes, dense_units=32, dropout_rate=0.2):
-    X_input = tf.keras.layers.Input(input_shape)
+    inputs = tf.keras.Input(input_shape)
 
-    X = tf.keras.layers.ZeroPadding2D((3, 3))(X_input)
-    # stage1
-    X = tf.keras.layers.Conv2D(64, (7, 7), strides=(2, 2),
-                               kernel_initializer=tf.keras.initializers.glorot_uniform(seed=0))(X)
-    X = tf.keras.layers.BatchNormalization(axis=3)(X)
-    X = tf.keras.layers.Activation('relu')(X)
-    X = tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2))(X)
-    # stage2
-    X = convolutional_block(X, f=3, filters=[64, 64, 256], s=1)
-    X = identity_block(X, 3, [64, 64, 256])
-    X = identity_block(X, 3, [64, 64, 256])
+    out = base_model(inputs, training=False)
 
-    # stage3
-    X = convolutional_block(X, f=3, filters=[128, 128, 512], s=2)
-    X = identity_block(X, 3, [128, 128, 512])
-    X = identity_block(X, 3, [128, 128, 512])
-    X = identity_block(X, 3, [128, 128, 512])
+    out = tf.keras.layers.GlobalAveragePooling2D()(out)
+    out = tf.keras.layers.Dense(dense_units, activation=tf.nn.softmax)(out)
+    out = tf.keras.layers.Dropout(dropout_rate)(out)
+    outputs = tf.keras.layers.Dense(n_classes)(out)
 
-    # stage4
-    X = convolutional_block(X, f=3, filters=[256, 256, 1024], s=2)
-    X = identity_block(X, 3, [256, 256, 1024])
-    X = identity_block(X, 3, [256, 256, 1024])
-    X = identity_block(X, 3, [256, 256, 1024])
-    X = identity_block(X, 3, [256, 256, 1024])
-    X = identity_block(X, 3, [256, 256, 1024])
+    return tf.keras.Model(inputs=inputs, outputs=outputs)
 
-    # X = X = convolutional_block(X, f=3, filters=[512, 512, 2048], stage=5, block='a', s=2)
-    # X = identity_block(X, 3, [512, 512, 2048).], stage = 5, block = 'b' )
-    # X = identity_block(X, 3, [512, 512, 2048], stage=5, block='c')
 
-    X = tf.keras.layers.AveragePooling2D(pool_size=(2, 2), padding='same')(X)
-    X = tf.keras.layers.Dense(dense_units, activation=tf.nn.softmax)(X)
-    X = tf.keras.layers.Dropout(dropout_rate)(X)
-    X = tf.keras.layers.Dense(n_classes)(X)
 
-    model = tf.keras.Model(inputs=X_input, outputs=X)
 
-    return model
