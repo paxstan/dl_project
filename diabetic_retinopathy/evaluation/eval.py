@@ -49,7 +49,8 @@ class Evaluation(object):
 
     def evaluate(self):
         # self.checkpoint.restore(self.checkpoint_manager.latest_checkpoint).expect_partial()
-        self.model.load(self.run_paths["path_model_train"])
+        self.model= tf.keras.models.load_model(self.run_paths["path_model_train"])
+        self.model.summary()
         # if self.checkpoint_manager.latest_checkpoint:
         if True:
             print("Restored from {}".format(self.checkpoint_manager.latest_checkpoint))

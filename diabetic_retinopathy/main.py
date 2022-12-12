@@ -46,19 +46,21 @@ def main(argv):
     else:
         evaluation = Evaluation(model, ds_test, ds_info, run_paths)
         evaluation.evaluate()
-        image_path = '/home/paxstan/Documents/Uni/DL Lab/idrid/IDRID_dataset/images/test/IDRiD_001.jpg'
+        image_path = '/home/data/IDRID_dataset/images/test/IDRiD_001.jpg'
         grad_cam = GradCam(model=evaluation.model)
+        # trained_model = evaluation.model.get_layer('inception_resnet_v2')
+        # grad_cam = GradCam(model=trained_model)
         img_array = grad_cam.get_img_array(image_path)
         predict = evaluation.model.predict(img_array)
         print('predicted class: ', np.argmax(predict))
-        heatmap = grad_cam.make_gradcam_heatmap(img_array=img_array, last_conv_layer_name='max_pooling2d_1')
+        heatmap = grad_cam.make_gradcam_heatmap(img_array=img_array, last_conv_layer_name='inception_resnet_v2')
 
         # Display heatmap
         plt.matshow(heatmap)
         plt.show()
         grad_cam.save_and_display_gradcam(img_path=image_path,
                                           heatmap=heatmap,
-                                          cam_path='/home/paxstan/Documents/Uni/DL_Lab/gradcam_result/IDRiD_001.jpg')
+                                          cam_path='IDRiD_001_cam.jpg')
 
 
 if __name__ == "__main__":
