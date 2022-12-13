@@ -71,10 +71,10 @@ def efficient_netB4_model(input_shape, n_classes, dense_units=32, dropout_rate=0
     return tf.keras.Model(inputs=inputs, outputs=outputs)
 
 
-def inception_resnetv2_model(input_shape, n_classes, dense_units=32, dropout_rate=0.2):
-    base_model = tf.keras.applications.inception_resnet_v2.InceptionResNetV2(include_top=False,
-                                                                             weights='imagenet',
-                                                                             input_shape=input_shape)
+def vgg16_model(input_shape, n_classes, dense_units=32, dropout_rate=0.2):
+    base_model = tf.keras.applications.vgg16.VGG16(include_top=False,
+                                                   weights='imagenet',
+                                                   input_shape=input_shape)
     base_model.trainable = False
 
     inputs = tf.keras.Input(input_shape)

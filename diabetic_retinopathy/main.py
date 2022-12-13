@@ -10,7 +10,7 @@ from evaluation.eval import Evaluation
 # from evaluation.eval import evaluate
 from input_pipeline import datasets
 from utils import utils_params, utils_misc
-from models.architectures import vgg_like, efficient_netB4_model,inception_resnetv2_model
+from models.architectures import vgg_like, efficient_netB4_model,vgg16_model
 from visualization.gradcam import GradCam
 import matplotlib.pyplot as plt
 
@@ -37,8 +37,8 @@ def main(argv):
     ds_train, ds_val, ds_test, ds_info = datasets.load()
 
     # model
-    model = inception_resnetv2_model(input_shape=ds_info.features["image"].shape,
-                                  n_classes=ds_info.features["label"].num_classes)
+    model = vgg16_model(input_shape=ds_info.features["image"].shape,
+                        n_classes=ds_info.features["label"].num_classes)
 
     if FLAGS.train:
         trainer = Trainer(model, ds_train, ds_val, ds_info, run_paths)
