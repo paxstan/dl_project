@@ -10,7 +10,7 @@ from evaluation.eval import Evaluation
 # from evaluation.eval import evaluate
 from input_pipeline import datasets
 from utils import utils_params, utils_misc
-from models.architectures import vgg_like, efficient_netB4_model,inception_resnetv2_model
+from models.architectures import efficient_netB4_model, res_net50_model
 from visualization.gradcam import GradCam
 import matplotlib.pyplot as plt
 
@@ -37,7 +37,7 @@ def main(argv):
     ds_train, ds_val, ds_test, ds_info = datasets.load()
 
     # model
-    model = inception_resnetv2_model(input_shape=ds_info.features["image"].shape,
+    model = efficient_netB4_model(input_shape=ds_info.features["image"].shape,
                                   n_classes=ds_info.features["label"].num_classes)
 
     if FLAGS.train:
@@ -45,22 +45,23 @@ def main(argv):
         trainer.train_and_checkpoint()
     else:
         evaluation = Evaluation(model, ds_test, ds_info, run_paths)
+        evaluation.check_loaded_weights()
         evaluation.evaluate()
-        image_path = '/home/data/IDRID_dataset/images/test/IDRiD_001.jpg'
+        image_path = '/home/paxstan/Documents/Uni/DL Lab/idrid/IDRID_dataset/images/test/IDRiD_001.jpg'
         grad_cam = GradCam(model=evaluation.model)
         # trained_model = evaluation.model.get_layer('inception_resnet_v2')
         # grad_cam = GradCam(model=trained_model)
         img_array = grad_cam.get_img_array(image_path)
         predict = evaluation.model.predict(img_array)
         print('predicted class: ', np.argmax(predict))
-        heatmap = grad_cam.make_gradcam_heatmap(img_array=img_array, last_conv_layer_name='inception_resnet_v2')
+        heatmap = grad_cam.make_gradcam_heatmap(img_array=img_array, last_conv_layer_name='top_conv')
 
         # Display heatmap
         plt.matshow(heatmap)
         plt.show()
         grad_cam.save_and_display_gradcam(img_path=image_path,
                                           heatmap=heatmap,
-                                          cam_path='IDRiD_001_cam.jpg')
+                                          cam_path='/home/paxstan/Documents/Uni/DL Lab/idrid/IDRiD_001_cam_ef.jpg')
 
 
 if __name__ == "__main__":
