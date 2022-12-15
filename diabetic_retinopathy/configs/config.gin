@@ -1,14 +1,13 @@
 # Architectures
-vgg_like.base_filters = 8
-vgg_like.n_blocks = 3
-vgg_like.dense_units = 32
-vgg_like.dropout_rate = 0.2
 res_net50_model.dense_units = 32
 res_net50_model.dropout_rate = 0.2
+efficient_netB4_model.dense_units = 32
+efficient_netB4_model.dropout_rate = 0.2
+vgg16_model.dense_units = 32
+vgg16_model.dropout_rate = 0.2
 
 
 # Layers
-vgg_block.kernel_size = (3, 3)
 
 # Training
 Trainer.total_steps = 1e3
@@ -22,12 +21,12 @@ Trainer.batch_size = 32
 #load.name = 'mnist'
 #load.data_dir = '/home/paxstan/tensorflow_datasets/mnist/3.0.1'
 load.name = 'idrid'
-load.data_dir = '/home/janavi/idrid/IDRID_dataset'
-load.tf_record_dir = '/home/janavi/dl_lab/dl-lab-22w-team07/diabetic_retinopathy/tfrecord'
+#load.data_dir = '/home/janavi/idrid/IDRID_dataset'
+#load.tf_record_dir = '/home/janavi/dl_lab/dl-lab-22w-team07/diabetic_retinopathy/tfrecord'
 #load.data_dir = '/home/data/IDRID_dataset'
 #load.tf_record_dir = '/home/RUS_CIP/st180304/st180304/TfRecord'
-#load.data_dir = '/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/diabetic_retinopathy/Data/IDRID_dataset'
-#load.tf_record_dir = '/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/diabetic_retinopathy/Data/IDRID_dataset/TfRecord'
+load.data_dir = '/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/diabetic_retinopathy/Data/IDRID_dataset'
+load.tf_record_dir = '/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/diabetic_retinopathy/Data/IDRID_dataset/TfRecord'
 preprocess.img_height = 256
 preprocess.img_width = 256
 preprocess.scale = 102

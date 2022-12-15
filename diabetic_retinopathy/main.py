@@ -3,14 +3,12 @@ import logging
 
 import numpy as np
 from absl import app, flags
-import argparse
 
 from train import Trainer
 from evaluation.eval import Evaluation
-# from evaluation.eval import evaluate
 from input_pipeline import datasets
 from utils import utils_params, utils_misc
-from models.architectures import vgg_like, efficient_netB4_model,vgg16_model
+from models.architectures import res_net50_model, efficient_netB4_model, vgg16_model
 from visualization.gradcam import GradCam
 import matplotlib.pyplot as plt
 
@@ -30,19 +28,31 @@ def main(argv):
     gin.parse_config_files_and_bindings(['configs/config.gin'], [])
     utils_params.save_config(run_paths['path_gin'], gin.config_str())
 
-    # initialize wandb with your project name and optionally with configurations.
-    # play around with the config values and see the result on your wandb dashboard.
-
     # setup pipeline
     ds_train, ds_val, ds_test, ds_info = datasets.load()
 
-    # model
-    model = vgg16_model(input_shape=ds_info.features["image"].shape,
-                        n_classes=ds_info.features["label"].num_classes)
+    # model for name, model in models:
+    efficient_b4_model = efficient_netB4_model(input_shape=ds_info.features["image"].shape,
+                                               n_classes=ds_info.features["label"].num_classes)
+
+    res_net_model = res_net50_model(input_shape=ds_info.features["image"].shape,
+                                    n_classes=ds_info.features["label"].num_classes)
+
+    vgg_16_model = vgg16_model(input_shape=ds_info.features["image"].shape,
+                               n_classes=ds_info.features["label"].num_classes)
+
+    models = {
+        'efficient_net_b4': efficient_b4_model,
+        'res_net_50': res_net_model,
+        'vgg_16': vgg_16_model
+    }
 
     if FLAGS.train:
-        trainer = Trainer(model, ds_train, ds_val, ds_info, run_paths)
-        trainer.train_and_checkpoint()
+        for name, model in models.items():
+            trainer = Trainer(model, name, ds_train, ds_val, ds_info, run_paths)
+            for _ in trainer.train():
+                continue
+            trainer.run.finish()
     else:
         evaluation = Evaluation(model, ds_test, ds_info, run_paths)
         evaluation.evaluate()
