@@ -10,7 +10,7 @@ from evaluation.eval import Evaluation
 # from evaluation.eval import evaluate
 from input_pipeline import datasets
 from utils import utils_params, utils_misc
-from models.architectures import efficient_netB4_model, res_net50_model
+from models.architectures import efficient_netB4_model, res_net50_model, vgg16_model
 from visualization.gradcam import GradCam
 import matplotlib.pyplot as plt
 
@@ -37,12 +37,25 @@ def main(argv):
     ds_train, ds_val, ds_test, ds_info = datasets.load()
 
     # model
-    model = efficient_netB4_model(input_shape=ds_info.features["image"].shape,
-                                  n_classes=ds_info.features["label"].num_classes)
+    efficient_b4_model = efficient_netB4_model(input_shape=ds_info.features["image"].shape,
+                                               n_classes=ds_info.features["label"].num_classes)
+
+    res_net_model = res_net50_model(input_shape=ds_info.features["image"].shape,
+                                    n_classes=ds_info.features["label"].num_classes)
+
+    vgg_16_model = vgg16_model(input_shape=ds_info.features["image"].shape,
+                               n_classes=ds_info.features["label"].num_classes)
+
+    models = {
+        'efficient_net_b4': efficient_b4_model,
+        'res_net_50': res_net_model,
+        'vgg_16': vgg_16_model
+    }
 
     if FLAGS.train:
-        trainer = Trainer(model, ds_train, ds_val, ds_info, run_paths)
-        trainer.train_and_checkpoint()
+        for name, model in models:
+            trainer = Trainer(model, ds_train, ds_val, ds_info, run_paths)
+            trainer.train_and_checkpoint()
     else:
         evaluation = Evaluation(model, ds_test, ds_info, run_paths)
         evaluation.check_loaded_weights()

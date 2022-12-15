@@ -1,17 +1,6 @@
 import tensorflow as tf
+import numpy as np
 from evaluation.metrics import ConfusionMatrix, BinaryTruePositives
-
-#
-# def evaluate(model, ds_test, ds_info, run_paths):
-#     model.load_weights(filepath=run_paths["path_ckpts_train"])
-#     # test_images, test_labels = ds_test.map(lambda x, y: (x, y))
-#     # test_pred = model.predict(test_images)
-#     performance_cbk = PerformanceVisualizationCallback(
-#         model=model,
-#         ds_test=ds_test,
-#         image_dir='performance_vizualizations')
-#     performance_cbk.on_epoch_end()
-#     return
 
 
 class Evaluation(object):
@@ -49,10 +38,9 @@ class Evaluation(object):
 
     def evaluate(self):
         # self.checkpoint.restore(self.checkpoint_manager.latest_checkpoint).expect_partial()
-        self.model= tf.keras.models.load_model(self.run_paths["path_model_train"])
-        self.model.summary()
-        # if self.checkpoint_manager.latest_checkpoint:
-        if True:
+        # self.model = tf.keras.models.load_model(self.run_paths["path_model_train"])
+        # self.model.summary()
+        if self.checkpoint_manager.latest_checkpoint:
             print("Restored from {}".format(self.checkpoint_manager.latest_checkpoint))
             for test_images, test_labels in self.ds_test:
                 self.epoch += 1
@@ -73,3 +61,31 @@ class Evaluation(object):
             print("No model loaded.")
         return self.confusion_metrics.result()
 
+    def check_loaded_weights(self):
+        initial_weights = [layer.get_weights() for layer in self.model.layers]
+        self.checkpoint.restore(self.checkpoint_manager.latest_checkpoint).expect_partial()
+        for layer, initial in zip(self.model.layers, initial_weights):
+            weights = layer.get_weights()
+            if not(weights and all(tf.nest.map_structure(np.array_equal, weights, initial))):
+                print(f'Checkpoint contained weights for layer {layer.name}!')
+
+        # store weights before loading pre-trained weights
+        # preloaded_layers = self.model.layers.copy()
+        # preloaded_weights = []
+        # for pre in preloaded_layers:
+        #     preloaded_weights.append(pre.get_weights())
+        #
+        # # load pre-trained weights
+        # # self.model.load_weights(filepath, by_name=True)
+        #
+        # self.checkpoint.restore(self.checkpoint_manager.latest_checkpoint).expect_partial()
+        #
+        # # compare previews weights vs loaded weights
+        # for layer, pre in zip(self.model.layers, preloaded_weights):
+        #     weights = layer.get_weights()
+        #
+        #     if weights:
+        #         if np.array_equal(weights, pre):
+        #             print('not loaded', layer.name)
+        #         else:
+        #             print('loaded', layer.name)

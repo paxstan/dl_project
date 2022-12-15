@@ -36,9 +36,10 @@ class GradCam(object):
     def make_gradcam_heatmap(self, img_array, last_conv_layer_name, pred_index=None):
         # First, we create a model that maps the input image to the activations
         # of the last conv layer as well as the output predictions
+        # inputs = tf.keras.Input(img_array)
         last_layer = self.model.get_layer(last_conv_layer_name)
         grad_model = tf.keras.models.Model(
-            [self.model.inputs, last_layer.inputs], [last_layer.output, self.model.output]
+            [self.model.inputs], [last_layer.output, self.model.output]
         )
 
         # Then, we compute the gradient of the top predicted class for our input image

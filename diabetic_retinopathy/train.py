@@ -40,7 +40,7 @@ class Trainer(object):
         self.checkpoint_manager = tf.train.CheckpointManager(
             self.checkpoint, directory=self.checkpoint_prefix, max_to_keep=5)
 
-        self.model_save_dir = self.run_paths['path_model_train']
+        # self.model_save_dir = self.run_paths['path_model_train']
 
     @tf.function
     def train_step(self, images, labels):
@@ -112,7 +112,7 @@ class Trainer(object):
                 # Save final checkpoint
                 # self.model.save_weights(filepath=self.run_paths["path_ckpts_train"])
                 self.checkpoint_manager.save()
-                self.model.save(self.model_save_dir)
+                # self.model.save(self.model_save_dir)
                 return self.val_accuracy.result()
 
     def train_and_checkpoint(self):
