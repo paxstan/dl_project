@@ -37,7 +37,7 @@ def main(argv):
     ds_train, ds_val, ds_test, ds_info = datasets.load()
 
     # model
-    model = vgg16_model(input_shape=ds_info.features["image"].shape,
+    model = efficient_netB4_model(input_shape=ds_info.features["image"].shape,
                         n_classes=ds_info.features["label"].num_classes)
 
     if FLAGS.train:

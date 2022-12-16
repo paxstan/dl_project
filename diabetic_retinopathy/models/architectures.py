@@ -1,4 +1,5 @@
 import gin
+import keras_tuner
 import tensorflow as tf
 from models.layers import vgg_block
 
@@ -52,8 +53,9 @@ def res_net50_model(input_shape, n_classes, dense_units, dropout_rate):
 
     return tf.keras.Model(inputs=inputs, outputs=outputs)
 
+@gin.configurable
+def efficient_netB4_model(input_shape, n_classes, dense_units, dropout_rate):
 
-def efficient_netB4_model(input_shape, n_classes, dense_units=32, dropout_rate=0.2):
     base_model = tf.keras.applications.efficientnet.EfficientNetB4(include_top=False,
                                                                    weights='imagenet',
                                                                    input_shape=input_shape)
