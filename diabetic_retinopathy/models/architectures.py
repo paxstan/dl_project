@@ -1,5 +1,4 @@
 import gin
-import keras_tuner
 import tensorflow as tf
 from models.layers import vgg_block
 
