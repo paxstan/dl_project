@@ -9,6 +9,7 @@ from evaluation.eval import Evaluation
 from input_pipeline import datasets
 from utils import utils_params, utils_misc
 from models.architectures import res_net50_model, efficient_netB4_model, vgg16_model
+from models.ensemble import Ensemble
 from visualization.gradcam import GradCam
 import matplotlib.pyplot as plt
 
@@ -54,7 +55,10 @@ def main(argv):
                 continue
             trainer.run.finish()
     else:
-        evaluation = Evaluation(model, ds_test, ds_info, run_paths)
+        ensemble = Ensemble(models, run_paths)
+        ensemble.load_all_models()
+        ensemble.define_stacked_model()
+        evaluation = Evaluation(ensemble.ensemble_model, ds_test, ds_info)
         evaluation.evaluate()
         image_path = '/home/paxstan/Documents/Uni/DL Lab/idrid/IDRID_dataset/images/test/IDRiD_001.jpg'
         grad_cam = GradCam(model=evaluation.model)
