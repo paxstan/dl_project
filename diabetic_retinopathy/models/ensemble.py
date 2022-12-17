@@ -3,11 +3,13 @@ import os
 
 
 class Ensemble(object):
-    def __init__(self, models, run_paths):
+    def __init__(self, models, run_paths, learning_rate):
         self.models = models
         self.run_paths = run_paths
         self.all_models = list()
         self.ensemble_model = None
+        self.loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
     # load models from file
     def load_all_models(self):
@@ -25,7 +27,8 @@ class Ensemble(object):
                 print("No model loaded")
 
     # define stacked model from multiple member input models
-    def define_stacked_model(self, n_classes=2, dense_units=32):
+    def define_stacked_model(self, n_classes=2, dense_units=4):
+        self.load_all_models()
         # update all layers in all models to not be trainable
         for i in range(len(self.all_models)):
             model = self.all_models[i]
@@ -40,9 +43,10 @@ class Ensemble(object):
         ensemble_outputs = [model.output for model in self.all_models]
         merge = tf.keras.layers.concatenate(ensemble_outputs)
         hidden = tf.keras.layers.Dense(dense_units, activation='relu')(merge)
-        output = tf.keras.layers.Dense(n_classes, activation='softmax')(hidden)
+        output = tf.keras.layers.Dense(n_classes)(hidden)
         self.ensemble_model = tf.keras.Model(inputs=ensemble_visible, outputs=output)
         # plot graph of ensemble
-        tf.keras.utils.plot_model(self.ensemble_model, show_shapes=True, to_file='model_graph.png')
+        tf.keras.utils.plot_model(self.ensemble_model, show_shapes=True,
+                                  to_file='/home/RUS_CIP/st180304/st180304/model_graph.png')
         # compile
-        self.ensemble_model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        self.ensemble_model.compile(loss=self.loss_object, optimizer=self.optimizer)

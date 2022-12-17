@@ -49,15 +49,13 @@ def main(argv):
     }
 
     if FLAGS.train:
-        for name, model in models.items():
-            trainer = Trainer(model, name, ds_train, ds_val, ds_info, run_paths)
-            for _ in trainer.train():
-                continue
-            trainer.run.finish()
-    else:
-        ensemble = Ensemble(models, run_paths)
-        ensemble.load_all_models()
+        train_routine(models, ds_train, ds_val, ds_info, run_paths, train=False)
+        # ensemble learning
+        ensemble = Ensemble(models, run_paths, learning_rate=0.001)
         ensemble.define_stacked_model()
+        ensemble_models = {'ensemble': ensemble.ensemble_model}
+        train_routine(ensemble_models, ds_train, ds_val, ds_info, run_paths)
+    else:
         evaluation = Evaluation(ensemble.ensemble_model, ds_test, ds_info)
         evaluation.evaluate()
         image_path = '/home/paxstan/Documents/Uni/DL Lab/idrid/IDRID_dataset/images/test/IDRiD_001.jpg'
@@ -73,6 +71,15 @@ def main(argv):
         grad_cam.save_and_display_gradcam(img_path=image_path,
                                           heatmap=heatmap,
                                           cam_path='/home/paxstan/Documents/Uni/DL_Lab/gradcam_result/IDRiD_001.jpg')
+
+
+def train_routine(models, ds_train, ds_val, ds_info, run_paths, train=True):
+    if train:
+        for name, model in models.items():
+            trainer = Trainer(model, name, ds_train, ds_val, ds_info, run_paths)
+            for _ in trainer.train():
+                continue
+            trainer.run.finish()
 
 
 if __name__ == "__main__":
