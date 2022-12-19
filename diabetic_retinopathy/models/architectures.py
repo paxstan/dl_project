@@ -14,9 +14,10 @@ def res_net50_model(input_shape, n_classes, dense_units, dropout_rate):
     out = tf.keras.layers.GlobalAveragePooling2D()(base_model.output)
     out = tf.keras.layers.Dense(dense_units, activation=tf.nn.relu)(out)
     out = tf.keras.layers.Dropout(dropout_rate)(out)
-    outputs = tf.keras.layers.Dense(n_classes, activation=tf.nn.softmax)(out)
+    outputs = tf.keras.layers.Dense(n_classes)(out)
 
     return tf.keras.Model(inputs=base_model.input, outputs=outputs)
+
 
 @gin.configurable
 def efficient_netB4_model(input_shape, n_classes, dense_units, dropout_rate):
@@ -29,9 +30,10 @@ def efficient_netB4_model(input_shape, n_classes, dense_units, dropout_rate):
     out = tf.keras.layers.GlobalAveragePooling2D()(base_model.output)
     out = tf.keras.layers.Dense(dense_units, activation=tf.nn.relu)(out)
     out = tf.keras.layers.Dropout(dropout_rate)(out)
-    outputs = tf.keras.layers.Dense(n_classes, activation=tf.nn.softmax)(out)
+    outputs = tf.keras.layers.Dense(n_classes)(out)
 
     return tf.keras.Model(inputs=base_model.input, outputs=outputs)
+
 
 @gin.configurable
 def vgg16_model(input_shape, n_classes, dense_units, dropout_rate):
@@ -44,6 +46,6 @@ def vgg16_model(input_shape, n_classes, dense_units, dropout_rate):
     out = tf.keras.layers.GlobalAveragePooling2D()(base_model.output)
     out = tf.keras.layers.Dense(dense_units, activation=tf.nn.relu)(out)
     out = tf.keras.layers.Dropout(dropout_rate)(out)
-    outputs = tf.keras.layers.Dense(n_classes, activation=tf.nn.softmax)(out)
+    outputs = tf.keras.layers.Dense(n_classes)(out)
 
     return tf.keras.Model(inputs=base_model.input, outputs=outputs)

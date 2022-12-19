@@ -46,8 +46,8 @@ class Evaluation(object):
             self.test_loss.reset_states()
             self.test_accuracy.reset_states()
             self.true_positive.reset_state()
-            X = [test_images for _ in range(len(self.model.input))]
-            self.test_step(X, test_labels, self.ds_info.features["label"].num_classes)
+            # X = [test_images for _ in range(len(self.model.input))]
+            self.test_step(test_images, test_labels, self.ds_info.features["label"].num_classes)
             template = 'Step {}, Test Loss: {}, Test Accuracy: {}, True Positives: {},\n Confusion matrix: \n{}'
             print(template.format(
                 self.epoch,

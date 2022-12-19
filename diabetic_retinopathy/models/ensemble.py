@@ -1,10 +1,12 @@
+import gin
 import tensorflow as tf
 import os
+import numpy as np
 
-
+@gin.configurable
 class Ensemble(object):
     def __init__(self, models, run_paths, learning_rate):
-        self.models = models
+        # self.models = models
         self.run_paths = run_paths
         self.all_models = list()
         self.ensemble_model = None
@@ -12,23 +14,25 @@ class Ensemble(object):
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
     # load models from file
-    def load_all_models(self):
-        for name, model in self.models.items():
+    def load_all_models(self, models):
+        for name, (_, model) in models.items():
             checkpoint_path = os.path.join(self.run_paths["path_ckpts_train"], name)
             optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
             checkpoint = tf.train.Checkpoint(step=tf.Variable(1),
                                              optimizer=optimizer, model=model)
             checkpoint_manager = tf.train.CheckpointManager(
                 checkpoint, directory=checkpoint_path, max_to_keep=5)
+            self.checkpoint.restore(self.checkpoint_manager.latest_checkpoint)
             if checkpoint_manager.latest_checkpoint:
                 print("Restored {} from {}".format(name, checkpoint_manager.latest_checkpoint))
                 self.all_models.append(model)
             else:
-                print("No model loaded")
+                print("{} model not loaded".format(name))
+                return False
+        return True
 
     # define stacked model from multiple member input models
     def define_stacked_model(self, n_classes, dense_units):
-        self.load_all_models()
         # update all layers in all models to not be trainable
         for i in range(len(self.all_models)):
             model = self.all_models[i]
@@ -51,4 +55,49 @@ class Ensemble(object):
         # compile
         self.ensemble_model.compile(loss=self.loss_object, optimizer=self.optimizer)
 
+    def ensemble_prediction(self, test_images, test_labels):
+        stack_x = None
+        for name, (_, model) in self.models.items():
+            # make prediction
+            predictions = model(test_images, training=False)
+            y_pred = tf.reshape(tf.argmax(predictions, axis=1), shape=(-1, 1))
+            # stack predictions into [rows, members, probabilities]
+            if stack_x is None:
+                stack_x = y_pred
+            else:
+                stack_x = np.dstack((stack_x, y_pred))
+        return stack_x
 
+    # create stacked model input dataset as outputs from the ensemble
+    def stacked_dataset(self, test_image):
+        stack_x = None
+        for name, (_, model) in self.models.items():
+            # make prediction
+            predictions = model(test_image, training=False)
+            # y_pred = tf.reshape(tf.argmax(predictions, axis=1), shape=(-1, 1))
+            # stack predictions into [rows, members, probabilities]
+            if stack_x is None:
+                stack_x = predictions
+            else:
+                stack_x = np.dstack((stack_x, predictions))
+        # flatten predictions to [rows, members x probabilities]
+        stack_x = stack_x.reshape((stack_x.shape[0], stack_x.shape[1] * stack_x.shape[2]))
+        return stack_x
+
+    # fit a model based on the outputs from the ensemble members
+    def fit_stacked_model(self, inputX, inputy):
+        # create dataset using ensemble
+        stackedX = self.stacked_dataset(members, inputX)
+        # fit standalone model
+        model = LogisticRegression()
+        model.fit(stackedX, inputy)
+        return model
+
+    #
+    # # make a prediction with the stacked model
+    def stacked_prediction(members, model, inputX):
+        # create dataset using ensemble
+        stackedX = stacked_dataset(members, inputX)
+        # make a prediction
+        yhat = model.predict(stackedX)
+        return yhat
