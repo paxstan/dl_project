@@ -50,3 +50,5 @@ class Ensemble(object):
                                   to_file='/home/RUS_CIP/st180304/st180304/model_graph.png')
         # compile
         self.ensemble_model.compile(loss=self.loss_object, optimizer=self.optimizer)
+
+

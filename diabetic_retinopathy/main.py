@@ -43,10 +43,11 @@ def main(argv):
                                n_classes=ds_info.features["label"].num_classes)
 
     models = {
-        'efficient_net_b4': efficient_b4_model,
-        'res_net_50': res_net_model,
-        'vgg_16': vgg_16_model
+        'efficient_net_b4': [1e5, efficient_b4_model],
+        'res_net_50': [5e4, res_net_model],
+        'vgg_16': [1e5, vgg_16_model]
     }
+    ensemble_models = None
 
     if FLAGS.train:
         train_routine(models, ds_train, ds_val, ds_info, run_paths, train=False)
@@ -75,8 +76,8 @@ def main(argv):
 
 def train_routine(models, ds_train, ds_val, ds_info, run_paths, train=True):
     if train:
-        for name, model in models.items():
-            trainer = Trainer(model, name, ds_train, ds_val, ds_info, run_paths)
+        for name, (steps, model) in models.items():
+            trainer = Trainer(model, name, ds_train, ds_val, ds_info, run_paths, total_steps=steps)
             for _ in trainer.train():
                 continue
             trainer.run.finish()
