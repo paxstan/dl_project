@@ -27,7 +27,7 @@ class Ensemble(object):
                 print("No model loaded")
 
     # define stacked model from multiple member input models
-    def define_stacked_model(self, n_classes=2, dense_units=4):
+    def define_stacked_model(self, n_classes, dense_units):
         self.load_all_models()
         # update all layers in all models to not be trainable
         for i in range(len(self.all_models)):

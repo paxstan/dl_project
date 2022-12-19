@@ -181,7 +181,7 @@ def tfrecord_to_tfds(path, train_size, test_size):
         'image':
             tfds.features.Image(shape=(256, 256, 3)),
         'label':
-            tfds.features.ClassLabel(names=['0', '1']),
+            tfds.features.ClassLabel(names=['0', '1', '2', '3', '4']),
     })
 
     split_infos = [

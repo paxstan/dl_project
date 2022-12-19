@@ -50,10 +50,10 @@ def main(argv):
     ensemble_models = None
 
     if FLAGS.train:
-        train_routine(models, ds_train, ds_val, ds_info, run_paths, train=False)
+        train_routine(models, ds_train, ds_val, ds_info, run_paths)
         # ensemble learning
         ensemble = Ensemble(models, run_paths, learning_rate=0.001)
-        ensemble.define_stacked_model()
+        ensemble.define_stacked_model(n_classes=ds_info.features["label"].num_classes, dense_units=10)
         ensemble_models = {'ensemble': ensemble.ensemble_model}
         train_routine(ensemble_models, ds_train, ds_val, ds_info, run_paths)
     else:
