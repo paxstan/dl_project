@@ -3,9 +3,10 @@ import tensorflow as tf
 import os
 import numpy as np
 
+
 @gin.configurable
 class Ensemble(object):
-    def __init__(self, models, run_paths, learning_rate):
+    def __init__(self, run_paths, learning_rate):
         # self.models = models
         self.run_paths = run_paths
         self.all_models = list()
@@ -15,14 +16,13 @@ class Ensemble(object):
 
     # load models from file
     def load_all_models(self, models):
-        for name, (_, model) in models.items():
+        for name, (_, model, _) in models.items():
             checkpoint_path = os.path.join(self.run_paths["path_ckpts_train"], name)
-            optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
             checkpoint = tf.train.Checkpoint(step=tf.Variable(1),
-                                             optimizer=optimizer, model=model)
+                                             optimizer=self.optimizer, model=model)
             checkpoint_manager = tf.train.CheckpointManager(
                 checkpoint, directory=checkpoint_path, max_to_keep=5)
-            self.checkpoint.restore(self.checkpoint_manager.latest_checkpoint)
+            checkpoint.restore(checkpoint_manager.latest_checkpoint)
             if checkpoint_manager.latest_checkpoint:
                 print("Restored {} from {}".format(name, checkpoint_manager.latest_checkpoint))
                 self.all_models.append(model)
@@ -51,53 +51,17 @@ class Ensemble(object):
         self.ensemble_model = tf.keras.Model(inputs=ensemble_visible, outputs=output)
         # plot graph of ensemble
         tf.keras.utils.plot_model(self.ensemble_model, show_shapes=True,
-                                  to_file='/home/RUS_CIP/st180304/st180304/model_graph.png')
+                                  to_file='/home/paxstan/Documents/Uni/DL_Lab/model_graph.png')
         # compile
         self.ensemble_model.compile(loss=self.loss_object, optimizer=self.optimizer)
 
-    def ensemble_prediction(self, test_images, test_labels):
-        stack_x = None
-        for name, (_, model) in self.models.items():
-            # make prediction
-            predictions = model(test_images, training=False)
-            y_pred = tf.reshape(tf.argmax(predictions, axis=1), shape=(-1, 1))
-            # stack predictions into [rows, members, probabilities]
-            if stack_x is None:
-                stack_x = y_pred
-            else:
-                stack_x = np.dstack((stack_x, y_pred))
-        return stack_x
+    def ensemble_predictions(self, test_images):
+        # make predictions
+        predictions = [model(test_images, training=False) for model in self.all_models]
+        predictions = np.array(predictions)
+        # sum across ensemble members
+        summed = np.sum(predictions, axis=0)
+        # argmax across classes
+        # result = np.argmax(summed, axis=1)
+        return summed
 
-    # create stacked model input dataset as outputs from the ensemble
-    def stacked_dataset(self, test_image):
-        stack_x = None
-        for name, (_, model) in self.models.items():
-            # make prediction
-            predictions = model(test_image, training=False)
-            # y_pred = tf.reshape(tf.argmax(predictions, axis=1), shape=(-1, 1))
-            # stack predictions into [rows, members, probabilities]
-            if stack_x is None:
-                stack_x = predictions
-            else:
-                stack_x = np.dstack((stack_x, predictions))
-        # flatten predictions to [rows, members x probabilities]
-        stack_x = stack_x.reshape((stack_x.shape[0], stack_x.shape[1] * stack_x.shape[2]))
-        return stack_x
-
-    # fit a model based on the outputs from the ensemble members
-    def fit_stacked_model(self, inputX, inputy):
-        # create dataset using ensemble
-        stackedX = self.stacked_dataset(members, inputX)
-        # fit standalone model
-        model = LogisticRegression()
-        model.fit(stackedX, inputy)
-        return model
-
-    #
-    # # make a prediction with the stacked model
-    def stacked_prediction(members, model, inputX):
-        # create dataset using ensemble
-        stackedX = stacked_dataset(members, inputX)
-        # make a prediction
-        yhat = model.predict(stackedX)
-        return yhat

@@ -15,8 +15,10 @@ def res_net50_model(input_shape, n_classes, dense_units, dropout_rate):
     out = tf.keras.layers.Dense(dense_units, activation=tf.nn.relu)(out)
     out = tf.keras.layers.Dropout(dropout_rate)(out)
     outputs = tf.keras.layers.Dense(n_classes)(out)
+    model = tf.keras.Model(inputs=base_model.input, outputs=outputs)
+    model._name = 'modified_res_net50'
 
-    return tf.keras.Model(inputs=base_model.input, outputs=outputs)
+    return model
 
 
 @gin.configurable
@@ -31,8 +33,10 @@ def efficient_netB4_model(input_shape, n_classes, dense_units, dropout_rate):
     out = tf.keras.layers.Dense(dense_units, activation=tf.nn.relu)(out)
     out = tf.keras.layers.Dropout(dropout_rate)(out)
     outputs = tf.keras.layers.Dense(n_classes)(out)
+    model = tf.keras.Model(inputs=base_model.input, outputs=outputs)
+    model._name = 'modified_efficient_net_b4'
 
-    return tf.keras.Model(inputs=base_model.input, outputs=outputs)
+    return model
 
 
 @gin.configurable
@@ -48,4 +52,7 @@ def vgg16_model(input_shape, n_classes, dense_units, dropout_rate):
     out = tf.keras.layers.Dropout(dropout_rate)(out)
     outputs = tf.keras.layers.Dense(n_classes)(out)
 
-    return tf.keras.Model(inputs=base_model.input, outputs=outputs)
+    model = tf.keras.Model(inputs=base_model.input, outputs=outputs)
+    model._name = 'modified_vgg16'
+
+    return model

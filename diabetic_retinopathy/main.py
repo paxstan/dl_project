@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean('train', False, 'Specify whether to train or evaluate a model.')
+flags.DEFINE_boolean('ensemble', False, 'Specify whether to train or evaluate a model.')
 flags.DEFINE_string('runId', "", 'Specify path to the run directory.')
 
 
@@ -43,9 +44,9 @@ def main(argv):
                                n_classes=ds_info.features["label"].num_classes)
 
     models = {
-        'efficient_net_b4': [1e5, efficient_b4_model],
-        'res_net_50': [5e4, res_net_model],
-        'vgg_16': [1e5, vgg_16_model]
+        efficient_b4_model.name: [1e5, efficient_b4_model, 'ensemble_1_top_conv'],
+        res_net_model.name: [5e4, res_net_model, 'ensemble_2_conv5_block3_3_conv'],
+        vgg_16_model.name: [1e5, vgg_16_model, 'ensemble_3_block5_conv2']
     }
 
     ensemble = Ensemble(run_paths)
@@ -61,39 +62,38 @@ def main(argv):
     else:
         ensemble.all_models = [efficient_b4_model, res_net_model, vgg_16_model]
         ensemble.define_stacked_model(n_classes=ds_info.features["label"].num_classes, dense_units=10)
-        model_loaded = ensemble.load_all_models({'ensemble', [0, ensemble.ensemble_model]})
-        if model_loaded:
-            # for test_images, test_labels in ds_test:
-            #     ensemble.ensemble_prediction(test_images, test_labels)
-            eval_routine(ensemble.ensemble_model, ds_test, ds_info)
-            image_path = '/home/paxstan/Documents/Uni/DL Lab/idrid/IDRID_dataset/images/test/IDRiD_001.jpg'
-            grad_cam = GradCam(model=ensemble.ensemble_model)
-            img_array = grad_cam.get_img_array(image_path)
-            predict = ensemble.ensemble_model.model.predict(img_array)
-            print('predicted class: ', np.argmax(predict))
-            heatmap = grad_cam.make_gradcam_heatmap(img_array=img_array, last_conv_layer_name='max_pooling2d_1')
-
-            # Display heatmap
-            plt.matshow(heatmap)
-            plt.show()
-            grad_cam.save_and_display_gradcam(img_path=image_path,
-                                              heatmap=heatmap,
-                                              cam_path='/home/paxstan/Documents/Uni/DL_Lab/gradcam_result/IDRiD_001.jpg')
+        if ensemble.load_all_models({'ensemble': [0, ensemble.ensemble_model, '']}):
+            evaluation = Evaluation(ensemble.ensemble_model, ds_test, ds_info)
+            evaluation.evaluate(FLAGS.ensemble)
+            model_eval_routine(models, ensemble)
 
 
 def train_routine(models, ds_train, ds_val, ds_info, run_paths, train=True):
     if train:
-        for name, (steps, model) in models.items():
+        for name, (steps, model, _) in models.items():
             trainer = Trainer(model, name, ds_train, ds_val, ds_info, run_paths, total_steps=steps)
             for _ in trainer.train():
                 continue
             trainer.run.finish()
 
 
-def eval_routine(models, ds_test, ds_info):
-    for name, (_, model) in models.items():
-        evaluation = Evaluation(model, ds_test, ds_info)
-        evaluation.evaluate()
+def model_eval_routine(models, ensemble):
+    for name, (_, model, last_layer) in models.items():
+        image_path = '/home/paxstan/Documents/Uni/DL Lab/idrid/IDRID_dataset/images/test/IDRiD_001.jpg'
+        selected_model = [models for models in ensemble.all_models if models.name == model.name]
+        grad_cam = GradCam(model=selected_model[0])
+        img_array = grad_cam.get_img_array(image_path)
+        predict = selected_model[0].predict(img_array)
+        print('predicted class: ', np.argmax(predict))
+        heatmap = grad_cam.make_gradcam_heatmap(img_array=img_array, last_conv_layer_name=last_layer)
+
+        # Display heatmap
+        plt.matshow(heatmap)
+        plt.show()
+        grad_cam.save_and_display_gradcam(img_path=image_path,
+                                          heatmap=heatmap,
+                                          cam_path=('/home/paxstan/Documents/Uni/DL_Lab/gradcam_result/IDRiD_001_{}.jpg'
+                                                    ).format(name))
 
 
 if __name__ == "__main__":
