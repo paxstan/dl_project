@@ -128,7 +128,8 @@ def create_tf_records(file_type, data_dir, tf_record_dir):
     with tf.io.TFRecordWriter(path_tf_record) as writer:
         for index, rows in dataframe.iterrows():
             print(rows['Image name'])
-            label = 0 if (int(rows['Retinopathy grade']) < 2) else 1
+            # label = 0 if (int(rows['Retinopathy grade']) < 2) else 1
+            label = int(rows['Retinopathy grade'])
             image = preprocess(cv2.imread(rows['path']))
             png_img = cv2.imencode('.png', image)[1]
             np_final_image = np.array(png_img)
@@ -180,7 +181,7 @@ def tfrecord_to_tfds(path, train_size, test_size):
         'image':
             tfds.features.Image(shape=(256, 256, 3)),
         'label':
-            tfds.features.ClassLabel(names=['0', '1']),
+            tfds.features.ClassLabel(names=['0', '1', '2', '3', '4']),
     })
 
     split_infos = [
