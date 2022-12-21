@@ -5,7 +5,7 @@ import ray
 from ray import tune
 
 from input_pipeline.datasets import load
-from models.architectures import vgg_like, efficient_netB4_model
+from models.architectures import efficient_netB4_model, res_net50_model
 from train import Trainer
 from utils import utils_params, utils_misc
 
@@ -31,7 +31,7 @@ def train_func(config):
     ds_train, ds_val, ds_test, ds_info = load()
 
     # model
-    model = efficient_netB4_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
+    model = res_net50_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
 
     trainer = Trainer(model, ds_train, ds_val, ds_info, run_paths)
     for val_accuracy in trainer.train():
