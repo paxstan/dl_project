@@ -44,8 +44,8 @@ def main(argv):
                                n_classes=ds_info.features["label"].num_classes)
 
     models = {
-        efficient_b4_model.name: [1e5, efficient_b4_model, 'ensemble_1_top_conv'],
-        res_net_model.name: [5e4, res_net_model, 'ensemble_2_conv5_block3_3_conv'],
+        efficient_b4_model.name: [5e4, efficient_b4_model, 'ensemble_1_top_conv'],
+        res_net_model.name: [1e5, res_net_model, 'ensemble_2_conv5_block3_3_conv'],
         vgg_16_model.name: [1e5, vgg_16_model, 'ensemble_3_block5_conv2']
     }
 

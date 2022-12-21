@@ -1,8 +1,8 @@
 # Architectures
 res_net50_model.dense_units = 32
 res_net50_model.dropout_rate = 0.2
-efficient_netB4_model.dense_units = 32
-efficient_netB4_model.dropout_rate = 0.2
+efficient_netB4_model.dense_units = 512
+efficient_netB4_model.dropout_rate = 0.394453
 vgg16_model.dense_units = 32
 vgg16_model.dropout_rate = 0.2
 
