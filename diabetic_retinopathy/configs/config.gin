@@ -1,6 +1,6 @@
 # Architectures
 res_net50_model.dense_units = 32
-res_net50_model.dropout_rate = 0.2
+res_net50_model.dropout_rate = 0.129676
 efficient_netB4_model.dense_units = 512
 efficient_netB4_model.dropout_rate = 0.394453
 vgg16_model.dense_units = 32
@@ -16,7 +16,7 @@ vgg16_model.dropout_rate = 0.2
 Trainer.log_interval = 1e2
 Trainer.ckpt_interval = 1e2
 Trainer.wandb_key = "8b5621f60202d49f7fa98ffafcb02ebbe4a3a314"
-Trainer.learning_rate = 0.001
+Trainer.learning_rate = 0.01
 Trainer.batch_size = 32
 
 # Input pipeline
