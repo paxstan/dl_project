@@ -8,7 +8,7 @@ vgg16_model.dropout_rate = 0.2
 
 
 # Ensemble
-Ensemble.learning_rate = 0.001
+#Ensemble.learning_rate = 0.001
 
 
 # Training
