@@ -5,7 +5,7 @@ import ray
 from ray import tune
 
 from input_pipeline.datasets import load
-from models.architectures import efficient_netB4_model, res_net50_model
+from models.architectures import efficient_netB4_model, res_net50_model, vgg16_model
 from train import Trainer
 from utils import utils_params, utils_misc
 
@@ -31,7 +31,7 @@ def train_func(config):
     ds_train, ds_val, ds_test, ds_info = load()
 
     # model
-    model = res_net50_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
+    model = vgg16_model(input_shape=ds_info.features["image"].shape, n_classes=ds_info.features["label"].num_classes)
 
     trainer = Trainer(model, "resnet50", ds_train, ds_val, ds_info, run_paths, total_steps=1e5)
     for val_accuracy in trainer.train():
@@ -46,8 +46,8 @@ analysis = tune.run(
         "Trainer.learning_rate": tune.choice([0.0001, 0.001, 0.01, 0.1]),
         #"efficient_netB4_model.base_filters": tune.choice([8, 16]),
         # "vgg_like.n_blocks": tune.choice([2, 3, 4, 5]),
-        "res_net50_model.dense_units": tune.choice([32, 64, 128, 256, 512]),
-        "res_net50_model.dropout_rate": tune.uniform(0, 0.9),
+        "vgg16_model.dense_units": tune.choice([32, 64, 128, 256, 512]),
+        "vgg16_model.dropout_rate": tune.uniform(0, 0.9),
     })
 
 print("Best config: ", analysis.get_best_config(metric="val_accuracy", mode="max"))
