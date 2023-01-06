@@ -56,8 +56,8 @@ def main(argv):
         models_loaded = ensemble.load_all_models(models)
         if models_loaded:
             ensemble.define_stacked_model(n_classes=ds_info.features["label"].num_classes, dense_units=4)
-            ensemble_models = {'ensemble': [1e4, ensemble.ensemble_model]}
-            train_routine(ensemble_models, ds_train, ds_val, ds_info, run_paths)
+            ensemble_models = {'ensemble': [1e4, ensemble.ensemble_model, '']}
+            train_routine(ensemble_models, ds_train, ds_val, ds_info, run_paths, ensemble=True)
 
     else:
         ensemble.all_models = [efficient_b4_model, res_net_model, vgg_16_model]
@@ -68,10 +68,10 @@ def main(argv):
             model_eval_routine(models, ensemble)
 
 
-def train_routine(models, ds_train, ds_val, ds_info, run_paths, train=True):
+def train_routine(models, ds_train, ds_val, ds_info, run_paths, train=True, ensemble=False):
     if train:
         for name, (steps, model, _) in models.items():
-            trainer = Trainer(model, name, ds_train, ds_val, ds_info, run_paths, total_steps=steps)
+            trainer = Trainer(model, name, ds_train, ds_val, ds_info, run_paths, total_steps=steps, ensemble=ensemble)
             for _ in trainer.train():
                 continue
             trainer.run.finish()
