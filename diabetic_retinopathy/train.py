@@ -10,7 +10,7 @@ import os
 @gin.configurable
 class Trainer(object):
     def __init__(self, model, model_name, ds_train, ds_val, ds_info, run_paths
-                 , total_steps, log_interval, ckpt_interval, learning_rate, batch_size, wandb_key):
+                 , total_steps, log_interval, ckpt_interval, learning_rate, batch_size, wandb_key, ensemble=False):
         self.model = model
         self.ds_train = ds_train
         self.ds_val = ds_val
@@ -21,6 +21,7 @@ class Trainer(object):
         self.learning_rate = learning_rate
         self.wandb_key = wandb_key
         self.batch_size = batch_size
+        self.ensemble = ensemble
 
         # Loss objective
         self.loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
@@ -86,6 +87,8 @@ class Trainer(object):
     def train(self):
         for idx, (images, labels) in enumerate(self.ds_train):
             self.checkpoint.step.assign_add(1)
+            if self.ensemble:
+                images = [images for _ in range(len(self.model.input))]
             self.train_step(images, labels)
 
             if int(self.checkpoint.step) % self.log_interval == 0:
@@ -95,6 +98,8 @@ class Trainer(object):
                 self.val_accuracy.reset_states()
 
                 for val_images, val_labels in self.ds_val:
+                    if self.ensemble:
+                        val_images = [val_images for _ in range(len(self.model.input))]
                     self.val_step(val_images, val_labels)
 
                 template = 'Step {}, Loss: {}, Accuracy: {}, Validation Loss: {}, Validation Accuracy: {}'
