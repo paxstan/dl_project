@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean('train', False, 'Specify whether to train or evaluate a model.')
-flags.DEFINE_boolean('ensemble', False, 'Specify whether to train or evaluate a model.')
 flags.DEFINE_string('runId', "", 'Specify path to the run directory.')
 
 
@@ -44,43 +43,38 @@ def main(argv):
                                n_classes=ds_info.features["label"].num_classes)
 
     models = {
-        efficient_b4_model.name: [5e4, efficient_b4_model, 'ensemble_1_top_conv'],
-        res_net_model.name: [1e5, res_net_model, 'ensemble_2_conv5_block3_3_conv'],
-        vgg_16_model.name: [1e5, vgg_16_model, 'ensemble_3_block5_conv2']
+        efficient_b4_model.name: [1e5, efficient_b4_model, 'top_conv'],
+        res_net_model.name: [5e4, res_net_model, 'conv5_block3_3_conv'],
+        vgg_16_model.name: [1e5, vgg_16_model, 'block5_conv2']
     }
 
     ensemble = Ensemble(run_paths)
 
     if FLAGS.train:
-        train_routine(models, ds_train, ds_val, ds_info, run_paths, train=False)
-        models_loaded = ensemble.load_all_models(models)
-        if models_loaded:
-            ensemble.define_stacked_model(n_classes=ds_info.features["label"].num_classes, dense_units=10)
-            ensemble_models = {'ensemble': [1e4, ensemble.ensemble_model]}
-            train_routine(ensemble_models, ds_train, ds_val, ds_info, run_paths)
+        train_routine(models, ds_train, ds_val, ds_info, run_paths)
 
     else:
-        ensemble.all_models = [efficient_b4_model, res_net_model, vgg_16_model]
-        ensemble.define_stacked_model(n_classes=ds_info.features["label"].num_classes, dense_units=10)
-        if ensemble.load_all_models({'ensemble': [0, ensemble.ensemble_model, '']}):
-            evaluation = Evaluation(ensemble.ensemble_model, ds_test, ds_info)
-            evaluation.evaluate(FLAGS.ensemble)
-            model_eval_routine(models, ensemble)
+        models_loaded = ensemble.load_all_models(models)
+        if models_loaded:
+            evaluation = Evaluation(ensemble, ds_test, ds_info)
+            evaluation.evaluate(ensemble=True)
+            model_eval_routine(models, ensemble, ds_test, ds_info)
 
 
-def train_routine(models, ds_train, ds_val, ds_info, run_paths, train=True):
-    if train:
-        for name, (steps, model, _) in models.items():
-            trainer = Trainer(model, name, ds_train, ds_val, ds_info, run_paths, total_steps=steps)
-            for _ in trainer.train():
-                continue
-            trainer.run.finish()
+def train_routine(models, ds_train, ds_val, ds_info, run_paths):
+    for name, (steps, model, _) in models.items():
+        trainer = Trainer(model, name, ds_train, ds_val, ds_info, run_paths, total_steps=steps)
+        for _ in trainer.train():
+            continue
+        trainer.run.finish()
 
-
-def model_eval_routine(models, ensemble):
+@gin.configurable
+def model_eval_routine(models, ensemble, ds_test, ds_info, image_path):
     for name, (_, model, last_layer) in models.items():
-        image_path = '/home/paxstan/Documents/Uni/DL Lab/idrid/IDRID_dataset/images/test/IDRiD_001.jpg'
         selected_model = [models for models in ensemble.all_models if models.name == model.name]
+        logging.info(f"Model: {model.name}")
+        evaluation = Evaluation(selected_model[0], ds_test, ds_info)
+        evaluation.evaluate()
         grad_cam = GradCam(model=selected_model[0])
         img_array = grad_cam.get_img_array(image_path)
         predict = selected_model[0].predict(img_array)
@@ -90,10 +84,11 @@ def model_eval_routine(models, ensemble):
         # Display heatmap
         plt.matshow(heatmap)
         plt.show()
+        grad_cam_path = '/home/paxstan/Documents/Uni/DL_Lab/gradcam_result/IDRiD_001_{}.jpg'.format(name)
+        logging.info(f"Saving grad cam image at {grad_cam_path}")
         grad_cam.save_and_display_gradcam(img_path=image_path,
                                           heatmap=heatmap,
-                                          cam_path=('/home/paxstan/Documents/Uni/DL_Lab/gradcam_result/IDRiD_001_{}.jpg'
-                                                    ).format(name))
+                                          cam_path=grad_cam_path)
 
 
 if __name__ == "__main__":

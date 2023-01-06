@@ -51,6 +51,6 @@ class BinaryTruePositives(tf.keras.metrics.Metric):
     def result(self):
         return self.true_positives
 
-    def reset_states(self):
+    def reset_state(self):
         # The state of the metric will be reset at the start of each epoch.
         self.true_positives.assign(0.)
