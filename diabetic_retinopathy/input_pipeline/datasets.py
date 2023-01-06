@@ -7,7 +7,7 @@ import cv2
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
-from input_pipeline.preprocessing import preprocess, augment, scale_radius
+from input_pipeline.preprocessing import preprocess, augment
 
 
 @gin.configurable
