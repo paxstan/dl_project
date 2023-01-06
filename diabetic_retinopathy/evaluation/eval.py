@@ -1,8 +1,10 @@
 import tensorflow as tf
+import logging
 from evaluation.metrics import ConfusionMatrix, BinaryTruePositives
 
 
 class Evaluation(object):
+    """class for evaluation"""
     def __init__(self, model, ds_test, ds_info):
         self.model = model
         self.ds_test = ds_test
@@ -16,17 +18,16 @@ class Evaluation(object):
 
     # @tf.function
     def metric_calculation(self, predictions, labels, num_classes):
-        # training=False is only needed if there are layers with different
-        # behavior during training versus inference (e.g. Dropout).
+        """function to calculate the metrics"""
         t_loss = self.loss_object(labels, predictions)
         self.test_loss(t_loss)
         self.test_accuracy(labels, predictions)
         y_pred = tf.reshape(tf.argmax(predictions, axis=1), shape=(-1, 1))
-        # y_pred = tf.argmax(predictions, axis=-1)
         self.confusion_metrics.update_state(y_pred, labels, num_classes)
         self.true_positive.update_state(y_pred, labels)
 
     def evaluate(self, ensemble=False):
+        """function to evaluate the model against test dataset"""
         for test_images, test_labels in self.ds_test:
             self.epoch += 1
             self.confusion_metrics.reset_state()
@@ -40,7 +41,7 @@ class Evaluation(object):
 
             self.metric_calculation(predictions, test_labels, self.ds_info.features["label"].num_classes)
             template = 'Step {}, Test Loss: {}, Test Accuracy: {}, True Positives: {},\n Confusion matrix: \n{}'
-            print(template.format(
+            logging.info(template.format(
                 self.epoch,
                 self.test_loss.result().numpy(),
                 self.test_accuracy.result().numpy() * 100,

@@ -9,6 +9,7 @@ import os
 
 @gin.configurable
 class Trainer(object):
+    """Class for training models"""
     def __init__(self, model, model_name, ds_train, ds_val, ds_info, run_paths
                  , total_steps, log_interval, ckpt_interval, learning_rate, batch_size, wandb_key):
         self.model = model
@@ -62,6 +63,7 @@ class Trainer(object):
 
     @tf.function
     def train_step(self, images, labels):
+        """function for training the model"""
         with tf.GradientTape() as tape:
             # training=True is only needed if there are layers with different
             # behavior during training versus inference (e.g. Dropout).
@@ -75,6 +77,7 @@ class Trainer(object):
 
     @tf.function
     def val_step(self, images, labels):
+        """function for validating the trained model"""
         # training=False is only needed if there are layers with different
         # behavior during training versus inference (e.g. Dropout).
         predictions = self.model(images, training=False)

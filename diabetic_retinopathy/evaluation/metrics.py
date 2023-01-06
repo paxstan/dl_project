@@ -9,6 +9,7 @@ import tensorflow as tf
 
 
 class ConfusionMatrix(tf.keras.metrics.Metric):
+    """Class for calculating confusion matrix metric"""
     def __init__(self, name="confusion_matrix", **kwargs):
         super(ConfusionMatrix, self).__init__(name=name, **kwargs)
         self.confusion_matrix = None
@@ -31,7 +32,7 @@ class ConfusionMatrix(tf.keras.metrics.Metric):
 
 
 class BinaryTruePositives(tf.keras.metrics.Metric):
-
+    """Class for calculating true positive metric"""
     def __init__(self, name='binary_true_positives', **kwargs):
         super(BinaryTruePositives, self).__init__(name=name, **kwargs)
         self.true_positives = self.add_weight(name='tp', initializer='zeros')

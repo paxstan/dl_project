@@ -6,22 +6,27 @@ import numpy as np
 import cv2
 import tensorflow as tf
 import tensorflow_datasets as tfds
-
 from input_pipeline.preprocessing import preprocess, augment
 
 
 @gin.configurable
 def load(name, data_dir, tf_record_dir):
+    """create and load dataset"""
     if name == "idrid":
         logging.info(f"Preparing dataset {name}...")
 
+        # create TF Record if it does not exist
         if not os.path.exists(tf_record_dir):
             os.makedirs(tf_record_dir)
             train_size = create_tf_records("train", data_dir, tf_record_dir)
             test_size = create_tf_records("test", data_dir, tf_record_dir)
             tfrecord_to_tfds(tf_record_dir, train_size, test_size)
+
+        # create TF builder from Tf Record directory
         tfds_builder = tfds.builder_from_directory(tf_record_dir)
         ds_info = tfds_builder.info
+
+        # split the dataset
         ds_train, ds_val, ds_test = tfds_builder.as_dataset(
             split=['train[:80%]', 'train[20%:]', 'test'],
             shuffle_files=True,
@@ -68,9 +73,11 @@ def load(name, data_dir, tf_record_dir):
 
 @gin.configurable
 def prepare(ds_train, ds_val, ds_test, ds_info, batch_size, caching):
+    """preprocess the dataset for training and evaluation"""
     # Prepare training dataset
     if caching:
         ds_train = ds_train.cache()
+    # Data Augmentation
     ds_train = ds_train.map(
         (lambda x, y: augment(x, y)), num_parallel_calls=tf.data.experimental.AUTOTUNE)
     ds_train = ds_train.shuffle(ds_info.splits['train'].num_examples // 10)
@@ -100,10 +107,12 @@ def prepare(ds_train, ds_val, ds_test, ds_info, batch_size, caching):
 
 
 def rawdata_to_df(data_dir, file_type, fields):
+    """Generate Data Frame from the directory"""
     path_csv = os.path.join(data_dir, "labels", '{}.csv'.format(file_type))
     data_frame = pd.read_csv(path_csv, usecols=fields)
     data_frame['path'] = data_frame['Image name'].map(
         lambda x: os.path.join(data_dir, "images/{}".format(file_type), '{}.jpg'.format(x)))
+    # check if image exist
     data_frame['exists'] = data_frame['path'].map(os.path.exists)
     data_frame.dropna(inplace=True)
     data_frame = data_frame[data_frame['exists']]
@@ -111,15 +120,17 @@ def rawdata_to_df(data_dir, file_type, fields):
 
 
 def balance_data(class_size, df):
+    """To balance the imbalance dataset by oversampling"""
     new_df = df.groupby(['Retinopathy grade']).apply(lambda x: x.sample(class_size, replace=True)).reset_index(
         drop=True)
     new_df = new_df.sample(frac=1).reset_index(drop=True)
-    print('New Data Size:', new_df.shape[0], 'Old Size:', df.shape[0])
+    logging.info('New Data Size:', new_df.shape[0], 'Old Size:', df.shape[0])
     new_df['Retinopathy grade'].hist(figsize=(10, 5))
     return new_df
 
 
 def create_tf_records(file_type, data_dir, tf_record_dir):
+    """create TF record from the given directory"""
     fields = ['Image name', 'Retinopathy grade']
     path_tf_record = os.path.join(tf_record_dir, 'idrid-{}.tfrecord-00000-of-00001'
                                   .format(file_type))
@@ -128,8 +139,8 @@ def create_tf_records(file_type, data_dir, tf_record_dir):
     with tf.io.TFRecordWriter(path_tf_record) as writer:
         for index, rows in dataframe.iterrows():
             print(rows['Image name'])
-            # label = 0 if (int(rows['Retinopathy grade']) < 2) else 1
-            label = int(rows['Retinopathy grade'])
+            # convert multiclass dataset to binary dataset by changing the labels
+            label = 0 if (int(rows['Retinopathy grade']) < 2) else 1
             image = preprocess(cv2.imread(rows['path']))
             png_img = cv2.imencode('.png', image)[1]
             np_final_image = np.array(png_img)
@@ -138,9 +149,6 @@ def create_tf_records(file_type, data_dir, tf_record_dir):
                 label))
     return dataframe.shape[0]
 
-
-# The following functions can be used to convert a value to a type compatible
-# with tf.train.Example.
 
 def _bytes_feature(value):
     """Returns a bytes_list from a string / byte."""
@@ -171,12 +179,12 @@ def serialize_example(image, label):
     }
 
     # Create a Features message using tf.train.Example.
-
     example_proto = tf.train.Example(features=tf.train.Features(feature=feature))
     return example_proto.SerializeToString()
 
 
 def tfrecord_to_tfds(path, train_size, test_size):
+    """converts TF Record to TF Dataset"""
     features = tfds.features.FeaturesDict({
         'image':
             tfds.features.Image(shape=(256, 256, 3)),
@@ -197,6 +205,7 @@ def tfrecord_to_tfds(path, train_size, test_size):
         ),
     ]
 
+    # write metadata
     tfds.folder_dataset.write_metadata(
         data_dir=path,
         features=features,

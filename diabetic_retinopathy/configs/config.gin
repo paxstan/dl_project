@@ -37,3 +37,4 @@ Trainer.batch_size = 32
 
 #Evaluation
 model_eval_routine.image_path = '/home/paxstan/Documents/Uni/DL Lab/idrid/IDRID_dataset/images/test/IDRiD_001.jpg'
+model_eval_routine.grad_path = '/home/RUS_CIP/st180304/st180304/gradcam_result'
