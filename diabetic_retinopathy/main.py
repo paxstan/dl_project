@@ -55,13 +55,13 @@ def main(argv):
         train_routine(models, ds_train, ds_val, ds_info, run_paths, train=False)
         models_loaded = ensemble.load_all_models(models)
         if models_loaded:
-            ensemble.define_stacked_model(n_classes=ds_info.features["label"].num_classes, dense_units=10)
+            ensemble.define_stacked_model(n_classes=ds_info.features["label"].num_classes, dense_units=4)
             ensemble_models = {'ensemble': [1e4, ensemble.ensemble_model]}
             train_routine(ensemble_models, ds_train, ds_val, ds_info, run_paths)
 
     else:
         ensemble.all_models = [efficient_b4_model, res_net_model, vgg_16_model]
-        ensemble.define_stacked_model(n_classes=ds_info.features["label"].num_classes, dense_units=10)
+        ensemble.define_stacked_model(n_classes=ds_info.features["label"].num_classes, dense_units=4)
         if ensemble.load_all_models({'ensemble': [0, ensemble.ensemble_model, '']}):
             evaluation = Evaluation(ensemble.ensemble_model, ds_test, ds_info)
             evaluation.evaluate(FLAGS.ensemble)
