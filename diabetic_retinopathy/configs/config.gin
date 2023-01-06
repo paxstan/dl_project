@@ -1,24 +1,3 @@
-# Architectures
-res_net50_model.dense_units = 32
-res_net50_model.dropout_rate = 0.129676
-efficient_netB4_model.dense_units = 512
-efficient_netB4_model.dropout_rate = 0.394453
-vgg16_model.dense_units = 512
-vgg16_model.dropout_rate = 0.387642
-
-
-# Ensemble
-Ensemble.learning_rate = 0.001
-
-
-# Training
-# Trainer.total_steps = 1e3
-Trainer.log_interval = 1e2
-Trainer.ckpt_interval = 1e2
-Trainer.wandb_key = "8b5621f60202d49f7fa98ffafcb02ebbe4a3a314"
-Trainer.learning_rate = 0.001
-Trainer.batch_size = 32
-
 # Input pipeline
 #load.name = 'mnist'
 #load.data_dir = '/home/paxstan/tensorflow_datasets/mnist/3.0.1'
@@ -29,11 +8,32 @@ load.name = 'idrid'
 # load.tf_record_dir = '/home/RUS_CIP/st180304/st180304/TfRecord'
 load.data_dir = '/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/diabetic_retinopathy/Data/IDRID_dataset'
 load.tf_record_dir = '/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/diabetic_retinopathy/Data/IDRID_dataset/TfRecord_binary_class'
-#preprocess.img_height = 256
-#preprocess.img_width = 256
+preprocess.img_height = 256
+preprocess.img_width = 256
 preprocess.scale = 102
 #scale_radius.img_height = 256
 #scale_radius.img_width = 256
 #scale_radius.scale = 100
 prepare.batch_size = 32
 prepare.caching = False
+
+# Architectures
+res_net50_model.dense_units = 32
+res_net50_model.dropout_rate = 0.129676
+efficient_netB4_model.dense_units = 512
+efficient_netB4_model.dropout_rate = 0.394453
+vgg16_model.dense_units = 512
+vgg16_model.dropout_rate = 0.387642
+
+# Training
+Trainer.log_interval = 1e2
+Trainer.ckpt_interval = 1e2
+Trainer.wandb_key = "8b5621f60202d49f7fa98ffafcb02ebbe4a3a314"
+Trainer.learning_rate = 0.001
+Trainer.batch_size = 32
+
+# Ensemble
+#Ensemble.learning_rate = 0.001
+
+#Evaluation
+model_eval_routine.image_path = '/home/paxstan/Documents/Uni/DL Lab/idrid/IDRID_dataset/images/test/IDRiD_001.jpg'
