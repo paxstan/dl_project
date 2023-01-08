@@ -6,8 +6,6 @@ __pycache__/
 # PyCharm
 .idea/
 
-# Custom
-experiments/
 
 # C extensions
 *.so
@@ -148,3 +146,5 @@ Data/
 wandb/
 tfrecord/
 input_pipeline/datasets.py
+# Custom
+experiments/
