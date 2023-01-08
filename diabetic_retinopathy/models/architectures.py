@@ -1,7 +1,7 @@
 import gin
 import tensorflow as tf
 
-
+"""Transfer learning models for ensemble learning"""
 @gin.configurable
 def res_net50_model(input_shape, n_classes, dense_units, dropout_rate):
     inputs = tf.keras.Input(input_shape)
