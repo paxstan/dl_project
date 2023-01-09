@@ -11,7 +11,7 @@ from utils import utils_params, utils_misc
 
 
 def train_func(config):
-    # Hyperparameters
+    """Hyperparameters optimization"""
     bindings = []
     for key, value in config.items():
         bindings.append(f'{key}={value}')
@@ -42,10 +42,7 @@ ray.init(num_cpus=10, num_gpus=1)
 analysis = tune.run(
     train_func, num_samples=20, resources_per_trial={"cpu": 10, "gpu": 1},
     config={
-        # "Trainer.total_steps": tune.grid_search([1e5]),
         "Trainer.learning_rate": tune.choice([0.0001, 0.001, 0.01, 0.1]),
-        #"efficient_netB4_model.base_filters": tune.choice([8, 16]),
-        # "vgg_like.n_blocks": tune.choice([2, 3, 4, 5]),
         "vgg16_model.dense_units": tune.choice([32, 64, 128, 256, 512]),
         "vgg16_model.dropout_rate": tune.uniform(0, 0.9),
     })
