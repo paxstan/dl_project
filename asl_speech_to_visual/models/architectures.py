@@ -4,15 +4,15 @@ from models.layers import SpeechFeatureEmbedding, TokenEmbedding, TransformerEnc
 
 class Transformer(tf.keras.Model):
     def __init__(
-        self,
-        num_hid=64,
-        num_head=2,
-        num_feed_forward=128,
-        source_maxlen=100,
-        target_maxlen=100,
-        num_layers_enc=4,
-        num_layers_dec=1,
-        num_classes=10,
+            self,
+            num_hid=64,
+            num_head=2,
+            num_feed_forward=128,
+            source_maxlen=100,
+            target_maxlen=100,
+            num_layers_enc=4,
+            num_layers_dec=1,
+            num_classes=10,
     ):
         super().__init__()
         self.loss_metric = tf.keras.metrics.Mean(name="loss")

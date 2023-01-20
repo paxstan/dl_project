@@ -148,3 +148,6 @@ tfrecord/
 input_pipeline/datasets.py
 # Custom
 experiments/
+asl_speech_to_visual/pretrained_models
+asl_speech_to_visual/test.py
+asl_speech_to_visual/vocab.json

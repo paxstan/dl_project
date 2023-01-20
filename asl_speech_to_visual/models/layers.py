@@ -4,9 +4,6 @@ from glob import glob
 import tensorflow as tf
 from tensorflow import keras
 
-
-# from tensorflow.keras import layers
-
 class TokenEmbedding(tf.keras.layers.Layer):
     def __init__(self, num_vocab=1000, maxlen=100, num_hid=64):
         super().__init__()

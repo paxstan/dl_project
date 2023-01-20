@@ -1,2 +1,6 @@
 # Input pipeline
-load.data_dir = "/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/asl_speech_to_visual/Data/LJSpeech_small/"
+# load.dataset_name = "speech_command"
+load.dataset_name = "lj_dataset"
+# load.data_dir = "/home/RUS_CIP/st180304/st180304/LJSpeechDataset"
+# load.data_dir = "/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/asl_speech_to_visual/Data/SpeechCommand"
+load.data_dir = "/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/asl_speech_to_visual/Data/LJSpeech_small"
