@@ -140,7 +140,8 @@ def create_tf_records(file_type, data_dir, tf_record_dir):
         for index, rows in dataframe.iterrows():
             print(rows['Image name'])
             # convert multiclass dataset to binary dataset by changing the labels
-            label = 0 if (int(rows['Retinopathy grade']) < 2) else 1
+            #label = 0 if (int(rows['Retinopathy grade']) < 2) else 1
+            label = int(rows['Retinopathy grade'])
             image = preprocess(cv2.imread(rows['path']))
             png_img = cv2.imencode('.png', image)[1]
             np_final_image = np.array(png_img)
