@@ -7,6 +7,7 @@ from evaluation.eval import DisplayOutputs
 from models.architectures import Transformer
 from models.learning_rate_schedule import CustomSchedule
 from utils import utils_params, utils_misc
+from train import Trainer
 
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean('train', False, 'Specify whether to train or evaluate a model.')
@@ -40,6 +41,8 @@ def main(argv):
 
         batch = next(iter(val_ds))
 
+        wandb_key = "8b5621f60202d49f7fa98ffafcb02ebbe4a3a314"
+
         display_cb = DisplayOutputs(
             batch, idx_to_char, target_start_token_idx=2, target_end_token_idx=3
         )  # set the arguments as per vocabulary index for '<' and '>'
@@ -65,10 +68,11 @@ def main(argv):
             decay_epochs=85,
             steps_per_epoch=len(train_ds),
         )
-        optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-        model.compile(optimizer=optimizer, loss=loss_fn)
+        optimizer = tf.keras.optimizers.Adam(learning_rate)
 
-        history = model.fit(train_ds, validation_data=val_ds, callbacks=[display_cb], epochs=1)
+        trainer = Trainer(model, optimizer, loss_fn, 1, train_ds, val_ds, display_cb, wandb_key)
+        trainer.train()
+
 
 
 if __name__ == "__main__":

@@ -4,18 +4,22 @@ import logging
 import pandas as pd
 import numpy as np
 from glob import glob
-import tensorflow as tf
-import tensorflow_io as tfio
 import tensorflow_datasets as tfds
-from input_pipeline.preprocessing import preprocess, VectorizeChar
+import tensorflow as tf
+from input_pipeline.preprocessing import preprocess, VectorizeChar, remove_special_characters, extract_all_chars, \
+    read_flac_file, path_to_audio
+
+SPEECH_DTYPE = tf.float32
+LABEL_DTYPE = tf.int32
+AUTOTUNE = tf.data.AUTOTUNE
 
 
 @gin.configurable()
 def load(dataset_name, data_dir):
     train_data, test_data, val_data = [], [], []
+    logging.info(f"Preparing dataset {dataset_name}...")
 
     if dataset_name == "lj_dataset":
-        logging.info(f"Preparing dataset {dataset_name}...")
         path_csv = os.path.join(data_dir, "metadata.csv")
         data_frame = pd.read_csv(path_csv, delimiter="|", names=["ID", "Transcription", "Normalized Transcription"])
         # nan_index = list(data_frame[data_frame.isnull().any(axis=1)].index.values)
@@ -37,7 +41,6 @@ def load(dataset_name, data_dir):
         test_data = test_inter_data[~dev_test_split]
 
     elif dataset_name == "speech_command":
-        logging.info(f"Preparing dataset {dataset_name}...")
 
         train_list = []
         # dev data
@@ -78,7 +81,41 @@ def load(dataset_name, data_dir):
         val_data = pd.DataFrame(dev_list)
         test_data = pd.DataFrame(test_list)
 
+    elif dataset_name == "libri_speech":
+        train_file_path = glob('{}/train-clean-100/**/**/**/*.txt'.format(data_dir))
+        val_file_path = glob('{}/dev-clean/**/**/**/*.txt'.format(data_dir))
+        test_file_path = glob('{}/test-clean/**/**/**/*.txt'.format(data_dir))
+        train_data = pd.DataFrame(map_audio_trans_libri(train_file_path))
+        val_data = pd.DataFrame(map_audio_trans_libri(val_file_path))
+        test_data = pd.DataFrame(map_audio_trans_libri(test_file_path))
+
+        # (ds_train, ds_val, ds_test), ds_info = tfds.load(
+        #     'librispeech',
+        #     split=['train[:80%]', 'train[80%:90%]', 'train[90%:]'],
+        #     shuffle_files=True,
+        #     as_supervised=True,
+        #     with_info=True,
+        #     data_dir=data_dir
+        # )
+
     return train_data, val_data, test_data, data_dir
+
+
+def map_audio_trans_libri(file_paths):
+    data_list = []
+    for file_path in file_paths:
+        with open(file_path) as file:
+            lines = file.read().split("\n")
+            for line in lines:
+                try:
+                    audio_name, transcript = line.split(" ", 1)
+                    audio_path = os.path.join(os.path.split(file_path)[0], "{}.flac".format(audio_name))
+                    file_size = os.path.getsize(audio_path)
+                    data_list.append(
+                        {'wav_filename': audio_path, 'wav_filesize': file_size, 'transcript': transcript})
+                except Exception as e:
+                    print(e)
+    return data_list
 
 
 def deepspeech_save_data(data_dir, train_data, val_data, test_data):
@@ -101,35 +138,24 @@ def deepspeech_preprocess(data_frame):
 def preprocess_data(model_name, data_frame, batch_size=0):
     if model_name == "transformer":
         vectorizer = VectorizeChar()
-        text_list = data_frame['transcript'].map(
-            lambda x: vectorizer(x)).tolist()
-        audio_list = data_frame['wav_filename'].tolist()
+        data_frame['transcript'] = data_frame['transcript'].map(
+            lambda x: vectorizer(x))
+        # nan_index = data_frame['transcript'].index[data_frame['transcript'].apply(np.isnan)]
+        data_frame.dropna(inplace=True)
+        text_list = data_frame['transcript'].tolist()
+        data_frame['tensorvalue'] = data_frame['wav_filename'].map(
+            lambda x: read_flac_file(x))
+        data_frame.dropna(inplace=True)
+        audio_list = data_frame['tensorvalue'].tolist()
         text_ds = tf.data.Dataset.from_tensor_slices(text_list)
         audio_ds = tf.data.Dataset.from_tensor_slices(audio_list)
-        audio_ds = audio_ds.map(
-            path_to_audio, num_parallel_calls=tf.data.AUTOTUNE
-        )
+        # tt = audio_ds.take(1)
+        # path_to_audio(tt)
+        # audio_ds = audio_ds.map(
+        #     path_to_audio, num_parallel_calls=tf.data.AUTOTUNE
+        # )
         ds = tf.data.Dataset.zip((audio_ds, text_ds))
         ds = ds.map(lambda x, y: {"source": x, "target": y})
         ds = ds.batch(batch_size)
         ds = ds.prefetch(tf.data.AUTOTUNE)
         return ds, vectorizer.get_vocabulary()
-
-
-def path_to_audio(path):
-    # spectrogram using stft
-    audio = tf.io.read_file(path)
-    audio, _ = tf.audio.decode_wav(audio, 1)
-    audio = tf.squeeze(audio, axis=-1)
-    stfts = tf.signal.stft(audio, frame_length=200, frame_step=80, fft_length=256)
-    x = tf.math.pow(tf.abs(stfts), 0.5)
-    # normalisation
-    means = tf.math.reduce_mean(x, 1, keepdims=True)
-    stddevs = tf.math.reduce_std(x, 1, keepdims=True)
-    x = (x - means) / stddevs
-    audio_len = tf.shape(x)[0]
-    # padding to 10 seconds
-    pad_len = 2754
-    paddings = tf.constant([[0, pad_len], [0, 0]])
-    x = tf.pad(x, paddings, "CONSTANT")[:pad_len, :]
-    return x

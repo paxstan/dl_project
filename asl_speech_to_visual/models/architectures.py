@@ -1,5 +1,9 @@
 import tensorflow as tf
 from models.layers import SpeechFeatureEmbedding, TokenEmbedding, TransformerEncoder, TransformerDecoder
+import tensorflow_hub as hub
+from wav2vec2 import Wav2Vec2Config
+
+config = Wav2Vec2Config()
 
 
 class Transformer(tf.keras.Model):

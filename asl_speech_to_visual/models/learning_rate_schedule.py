@@ -21,6 +21,8 @@ class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
 
     def calculate_lr(self, epoch):
         """ linear warm up - linear decay """
+        epoch = epoch.numpy()
+        print(self.init_lr, self.lr_after_warmup, self.warmup_epochs, epoch)
         warmup_lr = (
                 self.init_lr
                 + ((self.lr_after_warmup - self.init_lr) / (self.warmup_epochs - 1)) * epoch
@@ -36,4 +38,6 @@ class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
 
     def __call__(self, step):
         epoch = step // self.steps_per_epoch
-        return self.calculate_lr(epoch)
+        lr = self.calculate_lr(epoch)
+        print(lr)
+        return lr
