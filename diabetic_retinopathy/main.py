@@ -59,8 +59,9 @@ def main(argv):
         ensemble = Ensemble(run_paths)
         models_loaded = ensemble.load_all_models(models)
         if models_loaded:
-            evaluation = Evaluation(ensemble, ds_test, ds_info)
+            evaluation = Evaluation(ensemble, ds_test, ds_info, "ensemble")
             evaluation.evaluate(ensemble=True)
+
             # evaluate each model individually
             model_eval_routine(models, ensemble, ds_test, ds_info)
 
@@ -81,7 +82,7 @@ def model_eval_routine(models, ensemble, ds_test, ds_info, image_path, grad_path
         # get each model
         selected_model = [models for models in ensemble.all_models if models.name == model.name]
         logging.info(f"Model: {model.name}")
-        evaluation = Evaluation(selected_model[0], ds_test, ds_info)
+        evaluation = Evaluation(selected_model[0], ds_test, ds_info, name)
         evaluation.evaluate()
         # perform grad cam on the selected model
         grad_cam = GradCam(model=selected_model[0])

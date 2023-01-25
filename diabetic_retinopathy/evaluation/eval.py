@@ -5,8 +5,9 @@ from evaluation.metrics import ConfusionMatrix, BinaryTruePositives
 
 class Evaluation(object):
     """class for evaluation"""
-    def __init__(self, model, ds_test, ds_info):
+    def __init__(self, model, ds_test, ds_info, name):
         self.model = model
+        self.name = name
         self.ds_test = ds_test
         self.ds_info = ds_info
         self.epoch = 0
@@ -23,7 +24,7 @@ class Evaluation(object):
         self.test_loss(t_loss)
         self.test_accuracy(labels, predictions)
         y_pred = tf.reshape(tf.argmax(predictions, axis=1), shape=(-1, 1))
-        self.confusion_metrics.update_state(y_pred, labels, num_classes)
+        self.confusion_metrics.update_state(y_pred, labels, num_classes, self.epoch, self.name)
         self.true_positive.update_state(y_pred, labels)
 
     def evaluate(self, ensemble=False):

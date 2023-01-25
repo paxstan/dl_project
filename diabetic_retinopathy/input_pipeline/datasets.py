@@ -98,7 +98,7 @@ def prepare(ds_train, ds_val, ds_test, ds_info, batch_size, caching):
     ds_test = ds_test.map(
         (lambda x, y: (tf.image.resize(x, size=(256, 256), preserve_aspect_ratio=True), y)),
         num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    ds_test = ds_test.batch(batch_size)
+    ds_test = ds_test.batch(len(list(ds_test)))
     if caching:
         ds_test = ds_test.cache()
     ds_test = ds_test.prefetch(tf.data.experimental.AUTOTUNE)

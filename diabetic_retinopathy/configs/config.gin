@@ -2,14 +2,14 @@
 #load.name = 'mnist'
 #load.data_dir = '/home/paxstan/tensorflow_datasets/mnist/3.0.1'
 load.name = 'idrid'
-#load.data_dir = '/home/janavi/idrid/IDRID_dataset'
-#load.tf_record_dir = '/home/janavi/dl_lab/dl-lab-22w-team07/diabetic_retinopathy/tfrecord'
+load.data_dir = '/home/janavi/idrid/IDRID_dataset'
+load.tf_record_dir = '/home/janavi/dl_lab/dl-lab-22w-team07/diabetic_retinopathy/tfrecord'
 # load.data_dir = '/home/data/IDRID_dataset'
 # load.tf_record_dir = '/home/RUS_CIP/st180304/st180304/TfRecord'
-load.data_dir = '/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/diabetic_retinopathy/Data/IDRID_dataset'
-load.tf_record_dir = '/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/diabetic_retinopathy/Data/IDRID_dataset/TfRecord_binary_class'
-preprocess.img_height = 256
-preprocess.img_width = 256
+#load.data_dir = '/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/diabetic_retinopathy/Data/IDRID_dataset'
+#load.tf_record_dir = '/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/diabetic_retinopathy/Data/IDRID_dataset/TfRecord_binary_class'
+#preprocess.img_height = 256
+#preprocess.img_width = 256
 preprocess.scale = 102
 #scale_radius.img_height = 256
 #scale_radius.img_width = 256
@@ -36,5 +36,7 @@ Trainer.batch_size = 32
 #Ensemble.learning_rate = 0.001
 
 #Evaluation
-model_eval_routine.image_path = '/home/paxstan/Documents/Uni/DL Lab/idrid/IDRID_dataset/images/test/IDRiD_001.jpg'
-model_eval_routine.grad_path = '/home/RUS_CIP/st180304/st180304/gradcam_result'
+#model_eval_routine.image_path = '/home/paxstan/Documents/Uni/DL Lab/idrid/IDRID_dataset/images/test/IDRiD_001.jpg'
+#model_eval_routine.grad_path = '/home/RUS_CIP/st180304/st180304/gradcam_result'
+model_eval_routine.image_path = '/home/janavi/idrid/IDRID_dataset/images/test/IDRiD_001.jpg'
+model_eval_routine.grad_path = '/home/janavi'

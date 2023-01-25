@@ -145,6 +145,8 @@ Data/
 
 wandb/
 tfrecord/
+tfrecord_binary/
+tfrecord_multiclass/
 input_pipeline/datasets.py
 # Custom
 experiments/

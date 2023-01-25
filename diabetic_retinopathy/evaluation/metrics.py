@@ -3,9 +3,9 @@ import tensorflow as tf
 
 
 # from keras.callbacks import Callback
-# import matplotlib.pyplot as plt
-# import numpy as np
-# from scikitplot.metrics import plot_confusion_matrix, plot_roc
+import matplotlib.pyplot as plt
+import numpy as np
+from scikitplot.metrics import plot_confusion_matrix, plot_roc
 
 
 class ConfusionMatrix(tf.keras.metrics.Metric):
@@ -13,15 +13,15 @@ class ConfusionMatrix(tf.keras.metrics.Metric):
     def __init__(self, name="confusion_matrix", **kwargs):
         super(ConfusionMatrix, self).__init__(name=name, **kwargs)
         self.confusion_matrix = None
-        # self.image_dir = "/home/paxstan/Documents/Uni/DL_Lab"
+        self.image_dir = "/home/janavi"
 
-    def update_state(self, y_true, y_pred, num_classes):
+    def update_state(self, y_true, y_pred, num_classes, epoch, name):
         self.confusion_matrix = tf.math.confusion_matrix(y_true, y_pred, num_classes)
 
         # plot and save confusion matrix
-        # fig, ax = plt.subplots(figsize=(16, 12))
-        # plot_confusion_matrix(y_true, y_pred, ax=ax)
-        # fig.savefig(os.path.join(self.image_dir, f'confusion_matrix_epoch_{epoch}'))
+        fig, ax = plt.subplots(figsize=(16, 12))
+        plot_confusion_matrix(y_true, y_pred, ax=ax)
+        fig.savefig(os.path.join(self.image_dir, f'confusion_matrix_epoch_{epoch}_{name}'))
 
     def result(self):
         return self.confusion_matrix
