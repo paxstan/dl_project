@@ -1,8 +1,9 @@
 # Input pipeline
 #load.name = 'mnist'
 #load.data_dir = '/home/paxstan/tensorflow_datasets/mnist/3.0.1'
-load.name = 'idrid'
-load.data_dir = '/home/janavi/idrid/IDRID_dataset'
+load.name = 'eyepacs'
+#load.data_dir = '/home/janavi/idrid/IDRID_dataset'
+load.data_dir = '/home/data/tensorflow_datasets/diabetic_retinopathy_detection/btgraham-300/3.0.0'
 load.tf_record_dir = '/home/janavi/dl_lab/dl-lab-22w-team07/diabetic_retinopathy/tfrecord'
 # load.data_dir = '/home/data/IDRID_dataset'
 # load.tf_record_dir = '/home/RUS_CIP/st180304/st180304/TfRecord'
