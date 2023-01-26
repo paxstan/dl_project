@@ -66,12 +66,14 @@ class Transformer(tf.keras.Model):
 
     def train_step(self, batch):
         """Processes one batch inside model.fit()."""
-        source = batch["source"]
-        target = batch["target"]
-        dec_input = target[:, :-1]
-        dec_target = target[:, 1:]
+        # source = batch["speech"]
+        # target = batch["label"]
+        speech = batch[0]
+        label = batch[1]
+        # dec_input = target[:, :-1]
+        # dec_target = target[:, 1:]
         with tf.GradientTape() as tape:
-            preds = self([source, dec_input])
+            preds = self([speech, dec_input])
             one_hot = tf.one_hot(dec_target, depth=self.num_classes)
             mask = tf.math.logical_not(tf.math.equal(dec_target, 0))
             loss = self.compiled_loss(one_hot, preds, sample_weight=mask)
@@ -82,8 +84,8 @@ class Transformer(tf.keras.Model):
         return {"loss": self.loss_metric.result()}
 
     def test_step(self, batch):
-        source = batch["source"]
-        target = batch["target"]
+        source = batch["speech"]
+        target = batch["label"]
         dec_input = target[:, :-1]
         dec_target = target[:, 1:]
         preds = self([source, dec_input])

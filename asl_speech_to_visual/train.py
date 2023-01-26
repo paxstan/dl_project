@@ -14,14 +14,6 @@ class Trainer(object):
         self.train_ds = train_ds
         self.val_ds = val_ds
         self.display_cb = display_cb
-        # config = {
-        #     "name": "Transformer - LibriSpeech",
-        #     "learning_rate": 0.001,
-        #     "epochs": epoch,
-        #     "batch_size": 64,
-        #     "architecture": "Transformer",
-        #     "dataset": "LibriSpeech"
-        # }
         wandb.login(key=wandb_key)
         wandb.init(project='', entity="dl-team-07")
 

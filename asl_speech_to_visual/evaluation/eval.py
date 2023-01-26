@@ -22,10 +22,10 @@ class DisplayOutputs(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         if epoch % 5 != 0:
             return
-        source = self.batch["source"]
-        target = self.batch["target"].numpy()
+        source = self.batch["speech"]
+        target = self.batch["label"].numpy()
         bs = tf.shape(source)[0]
-        preds = self.model.generate(source, self.target_start_token_idx)
+        preds = self.model.predict(source)
         preds = preds.numpy()
         for i in range(bs):
             target_text = "".join([self.idx_to_char[_] for _ in target[i, :]])
