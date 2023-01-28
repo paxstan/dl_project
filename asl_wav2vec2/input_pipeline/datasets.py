@@ -1,8 +1,11 @@
 import gin
 import os
 from glob import glob
-# import soundfile as sf
+import soundfile as sf
 import tensorflow as tf
+import tensorflow_datasets as tfds
+import torch
+from tfrecord.torch.dataset import TFRecordDataset
 from input_pipeline.preprocessing import PreProcess
 
 REQUIRED_SAMPLE_RATE = 16000
@@ -11,7 +14,7 @@ LABEL_MAXLEN = 256
 BATCH_SIZE = 2
 SEED = 42
 preprocess = PreProcess()
-
+count = 0
 
 @gin.configurable()
 def load(data_dir, dataset_name):
@@ -34,9 +37,9 @@ def load(data_dir, dataset_name):
         create_tf_records("val", test_samples, tf_record_dir)
         create_tf_records("test", val_samples, tf_record_dir)
 
-    ds_train = load_tf_record(tf_record_dir, "train")
-    ds_val = load_tf_record(tf_record_dir, "val")
-    ds_test = load_tf_record(tf_record_dir, "test")
+    ds_train = TFRecordDataLoader(tf_record_dir, "train")
+    ds_val = TFRecordDataLoader(tf_record_dir, "val")
+    ds_test = TFRecordDataLoader(tf_record_dir, "test")
     return ds_train, ds_val, ds_test
 
 
@@ -45,11 +48,14 @@ def load_tf_record(tf_record_dir, file_type):
         os.path.join(tf_record_dir, "librispeech-{}.tfrecord-00000-of-00001".format(file_type))).map(
         read_tfrecords, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.padded_batch(BATCH_SIZE, padded_shapes=(AUDIO_MAXLEN, LABEL_MAXLEN), padding_values=(0.0, 0))
-    return dataset.prefetch(tf.data.AUTOTUNE)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+    return dataset
 
 
 # Read the data back out.
 def read_tfrecords(record: tf.train.Example):
+    global count
+    count = count + 1
     desc = {
         "speech": tf.io.FixedLenFeature((), tf.string),
         "label": tf.io.FixedLenFeature((), tf.string),
@@ -70,14 +76,14 @@ def read_txt_file(f):
 
 
 def read_flac_file(file_path):
-    # with open(file_path, "rb") as f:
-    #     audio, sample_rate = sf.read(f)
-    # if sample_rate != REQUIRED_SAMPLE_RATE:
-    #     raise ValueError(
-    #         f"sample rate (={sample_rate}) of your files must be {REQUIRED_SAMPLE_RATE}"
-    #     )
-    # file_id = os.path.split(file_path)[-1][:-len(".flac")]
-    # return {file_id: audio}
+    with open(file_path, "rb") as f:
+        audio, sample_rate = sf.read(f)
+    if sample_rate != REQUIRED_SAMPLE_RATE:
+        raise ValueError(
+            f"sample rate (={sample_rate}) of your files must be {REQUIRED_SAMPLE_RATE}"
+        )
+    file_id = os.path.split(file_path)[-1][:-len(".flac")]
+    return {file_id: audio}
 
 
 def fetch_sound_text_mapping(txt_files, flac_files):
@@ -133,3 +139,33 @@ def serialize_example(audio, text):
     # Create a Features message using tf.train.Example.
     example_proto = tf.train.Example(features=tf.train.Features(feature=feature))
     return example_proto.SerializeToString()
+
+
+class TFRecordDataLoader:
+    def __init__(self, tf_record_dir, file_type, batch_size=32):
+        self.ds = tfds.as_numpy(load_tf_record(tf_record_dir, file_type))
+        self.num_examples = count
+        self.batch_size = batch_size
+        self.labeled = True
+        self._iterator = None
+
+    def __iter__(self):
+        if self._iterator is None:
+            self._iterator = iter(self.ds)
+        else:
+            self._reset()
+        return self._iterator
+
+    def _reset(self):
+        self._iterator = iter(self.ds)
+
+    def __next__(self):
+        batch = next(self._iterator)
+        return batch
+
+    def __len__(self):
+        n_batches = self.num_examples // self.batch_size
+        if self.num_examples % self.batch_size == 0:
+            return n_batches
+        else:
+            return n_batches + 1
