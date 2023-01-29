@@ -1,6 +1,7 @@
 import tensorflow as tf
 import tensorflow_hub as hub
 from wav2vec2 import Wav2Vec2Config
+from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
 
 AUDIO_MAXLEN = 246000
 LABEL_MAXLEN = 256
@@ -21,4 +22,6 @@ class wav2vec2_tf(object):
         self.model.summary()
 
 
-
+class Wav2Vec2100h(object):
+    processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-100h")
+    model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-100h")
