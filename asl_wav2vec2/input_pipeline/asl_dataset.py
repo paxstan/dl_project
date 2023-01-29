@@ -4,6 +4,7 @@ from glob import glob
 import soundfile as sf
 import pandas as pd
 from datasets import load_dataset
+from torch.utils.data import DataLoader
 
 REQUIRED_SAMPLE_RATE = 16000
 AUDIO_MAXLEN = 246000
@@ -42,8 +43,11 @@ class LoadDataset(object):
                                    'train': self.train_path_record,
                                    'test': self.test_path_record,
                                    'val': self.val_path_record})
-
-        return dataset
+        dataset = dataset.map(self.prepare_dataset, num_proc=4)
+        ds_train = dataset["train"].map(group_batch, batched=True, batch_size=32)
+        ds_val = dataset["val"].map(group_batch, batched=True, batch_size=32)
+        ds_test = dataset["test"].map(group_batch, batched=True, batch_size=32)
+        return ds_train, ds_val, ds_test
 
     def prepare_dataset(self, batch):
         # batched output is "un-batched" to ensure mapping is correct
@@ -53,6 +57,10 @@ class LoadDataset(object):
         with self.processor.as_target_processor():
             batch["labels"] = self.processor(batch["text"]).input_ids
         return batch
+
+
+def group_batch(batch):
+    return {k: [v] for k, v in batch.items()}
 
 
 def create_parquet_record(path_record, text_path, flac_path):

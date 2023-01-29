@@ -24,12 +24,14 @@ def main(argv):
     utils_params.save_config(run_paths['path_gin'], gin.config_str())
 
     processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-100h")
-    model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-100h")
+    model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-100h",
+                                           ctc_loss_reduction="mean",
+                                           pad_token_id=processor.tokenizer.pad_token_id,)
     model.freeze_feature_encoder()
 
     load_dataset = LoadDataset(processor=processor)
-    dataset = load_dataset.load()
-    dataset = dataset.map(load_dataset.prepare_dataset, num_proc=4)
+    ds_train, ds_val, ds_test = load_dataset.load()
+
     data_collator = DataCollatorCTCWithPadding(processor=processor, padding=True)
     repo_name = "/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/asl_wav2vec2/checkpoint"
     wer_metric = WerMetricClass(processor)
@@ -40,7 +42,7 @@ def main(argv):
         per_device_train_batch_size=8,
         evaluation_strategy="steps",
         num_train_epochs=30,
-        fp16=True,
+        # fp16=True,
         gradient_checkpointing=True,
         save_steps=500,
         eval_steps=500,
@@ -56,8 +58,8 @@ def main(argv):
         data_collator=data_collator,
         args=training_args,
         compute_metrics=wer_metric.compute_metrics,
-        train_dataset=dataset["train"],
-        eval_dataset=dataset["val"],
+        train_dataset=ds_train,
+        eval_dataset=ds_val,
         tokenizer=processor.feature_extractor,
     )
 
