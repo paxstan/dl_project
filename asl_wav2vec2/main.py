@@ -6,6 +6,7 @@ from input_pipeline.asl_dataset import LoadDataset
 from input_pipeline.preprocessing import DataCollatorCTCWithPadding
 from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC, TrainingArguments, Trainer
 from evaluation.metrics import WerMetricClass
+import wandb
 
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean('train', False, 'Specify whether to train or evaluate a model.')
@@ -36,13 +37,17 @@ def main(argv):
     repo_name = "/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/asl_wav2vec2/checkpoint"
     wer_metric = WerMetricClass(processor)
 
+    wandb.login(anonymous="allow", key="8b5621f60202d49f7fa98ffafcb02ebbe4a3a314")
+
+    wandb.init(project="asl_wav2vec2", entity="dl-team-07")
+
     training_args = TrainingArguments(
         output_dir=repo_name,
         group_by_length=True,
         per_device_train_batch_size=8,
         evaluation_strategy="steps",
         num_train_epochs=30,
-        # fp16=True,
+        fp16=True,
         gradient_checkpointing=True,
         save_steps=500,
         eval_steps=500,
@@ -51,7 +56,8 @@ def main(argv):
         weight_decay=0.005,
         warmup_steps=1000,
         save_total_limit=2,
-        load_best_model_at_end=True
+        load_best_model_at_end=True,
+        report_to=["wandb"]
     )
     trainer = Trainer(
         model=model,

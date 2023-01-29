@@ -25,28 +25,16 @@ class LoadDataset(object):
 
     def load(self):
         if not os.path.exists(self.tf_record_dir):
-            # os.makedirs(self.train_path_record)
+            os.makedirs(self.train_path_record)
             os.makedirs(self.val_path_record)
             os.makedirs(self.test_path_record)
-            # train_data_dir = get_dirs_from_path(os.path.join(self.data_dir, "train-clean-100/train-clean-100"))
+            train_data_dir = get_dirs_from_path(os.path.join(self.data_dir, "train-clean-100/train-clean-100"))
             val_data_dir = get_dirs_from_path(os.path.join(self.data_dir, "dev-clean/dev-clean"))
             test_data_dir = get_dirs_from_path(os.path.join(self.data_dir, "test-clean/test-clean"))
 
-            # create_parquet_record(self.train_path_record, "train",  train_data_dir)
+            create_parquet_record(self.train_path_record, "train", train_data_dir)
             create_parquet_record(self.val_path_record, "val", val_data_dir)
             create_parquet_record(self.test_path_record, "test", test_data_dir)
-
-            # train_text_path = glob('{}/train-clean-100/**/**/**/*.txt'.format(self.data_dir))
-            # val_text_path = glob('{}/dev-clean/**/**/**/*.txt'.format(self.data_dir))
-            # test_text_path = glob('{}/test-clean/**/**/**/*.txt'.format(self.data_dir))
-            #
-            # train_flac_path = glob('{}/train-clean-100/**/**/**/*.flac'.format(self.data_dir))
-            # val_flac_path = glob('{}/dev-clean/**/**/**/*.flac'.format(self.data_dir))
-            # test_flac_path = glob('{}/test-clean/**/**/**/*.flac'.format(self.data_dir))
-
-            # create_parquet_record(self.train_path_record, train_text_path, train_flac_path)
-            # create_parquet_record(self.val_path_record, val_text_path, val_flac_path)
-            # create_parquet_record(self.test_path_record, test_text_path, test_flac_path)
 
         dataset = load_dataset("parquet",
                                data_files={
@@ -73,7 +61,7 @@ def get_dirs_from_path(path):
     dirs = [os.path.join(path, d) for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
     if len(dirs) > 80:
         dirs = dirs[:80]
-    return [(k, list(g)) for k, g in itertools.groupby(enumerate(dirs), lambda x: x[0]//2)]
+    return [(k, list(g)) for k, g in itertools.groupby(enumerate(dirs), lambda x: x[0] // 2)]
 
 
 def group_batch(batch):
@@ -90,7 +78,7 @@ def create_parquet_record(record_dir, file_type, data_list):
         dataframe = pd.DataFrame(fetch_sound_text_mapping(
             list(itertools.chain(*text_paths)), list(itertools.chain(*flac_paths))))
         dataframe.to_parquet(
-            "{}/librispeech-{}-00000-of-0000{}.parquet".format(record_dir, file_type, key+1),
+            "{}/librispeech-{}-00000-of-0000{}.parquet".format(record_dir, file_type, key + 1),
             index=False, compression='gzip')
 
 
@@ -109,10 +97,6 @@ def read_flac_file(file_path):
         raise ValueError(
             f"sample rate (={sample_rate}) of your files must be {REQUIRED_SAMPLE_RATE}"
         )
-    # if info.duration > 10:
-    #     print(
-    #         f"Too long, duration  (={info.duration})"
-    #     )
     file_id = os.path.split(file_path)[-1][:-len(".flac")]
     return {file_id: audio}
 
@@ -125,8 +109,6 @@ def fetch_sound_text_mapping(txt_files, flac_files):
     speech_samples = {}
     for f in flac_files:
         speech_samples.update(read_flac_file(f))
-
-    # assert len(txt_samples) == len(speech_samples)
 
     txt_samples, speech_samples = remove_mismatch(txt_samples, speech_samples)
 
