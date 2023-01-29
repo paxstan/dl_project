@@ -1,37 +1,7 @@
-import tensorflow as tf
-import wav2vec2
 import transformers
 import torch
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Union
-
-
-class PreProcess(object):
-    def __init__(self):
-        self.tokenizer = wav2vec2.Wav2Vec2Processor(is_tokenizer=True)
-        self.processor = wav2vec2.Wav2Vec2Processor(is_tokenizer=False)
-
-    def preprocess_text(self, text):
-        label = self.tokenizer(text)
-        return tf.constant(label, dtype=tf.int32)
-
-    def preprocess_speech(self, audio):
-        audio = tf.constant(audio, dtype=tf.float32)
-        return self.processor(tf.transpose(audio))
-
-
-class PreProcessWav2Vec2(object):
-    def __init__(self, processor):
-        self.processor = processor
-
-    def preprocess_text(self, text):
-        with self.processor.as_target_processor():
-            labels = self.processor(text).input_ids
-        return tf.constant(labels, dtype=tf.int32)
-
-    def preprocess_speech(self, audio):
-        audio = tf.constant(audio, dtype=tf.float32)
-        return self.processor(tf.transpose(audio), sampling_rate=16000, return_tensors="pt").input_values[0]
 
 
 @dataclass

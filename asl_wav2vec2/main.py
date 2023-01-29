@@ -1,11 +1,8 @@
 import gin
 import logging
-import tensorflow as tf
 from absl import app, flags
 from utils import utils_params, utils_misc
-from wav2vec2 import CTCLoss
-from models.architecture import wav2vec2_tf
-from input_pipeline.asl_dataset import load, LoadDataset
+from input_pipeline.asl_dataset import LoadDataset
 from input_pipeline.preprocessing import DataCollatorCTCWithPadding
 from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC, TrainingArguments, Trainer
 from evaluation.metrics import WerMetricClass
@@ -13,10 +10,6 @@ from evaluation.metrics import WerMetricClass
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean('train', False, 'Specify whether to train or evaluate a model.')
 flags.DEFINE_string('runId', "", 'Specify path to the run directory.')
-LEARNING_RATE = 5e-5
-AUDIO_MAXLEN = 246000
-LABEL_MAXLEN = 256
-BATCH_SIZE = 2
 
 
 def main(argv):
@@ -47,7 +40,7 @@ def main(argv):
         per_device_train_batch_size=8,
         evaluation_strategy="steps",
         num_train_epochs=30,
-        # fp16=True,
+        fp16=True,
         gradient_checkpointing=True,
         save_steps=500,
         eval_steps=500,
@@ -55,7 +48,8 @@ def main(argv):
         learning_rate=1e-4,
         weight_decay=0.005,
         warmup_steps=1000,
-        save_total_limit=2
+        save_total_limit=2,
+        load_best_model_at_end=True
     )
     trainer = Trainer(
         model=model,
@@ -68,6 +62,8 @@ def main(argv):
     )
 
     trainer.train()
+
+    trainer.save_model(output_dir="")
 
 
 if __name__ == "__main__":
