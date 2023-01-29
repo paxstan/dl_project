@@ -3,4 +3,4 @@
 # load.data_dir = "/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/asl_speech_to_visual/Data/SpeechCommand"
 # load.data_dir = "/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/asl_speech_to_visual/Data/LJSpeech_small"
 # load.data_dir = "/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/asl_speech_to_visual/Data/LibriSpeech_small"
-LoadDataset.data_dir = "/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/asl_speech_to_visual/Data/LibriSpeech"
+LoadDataset.data_dir = "/home/RUS_CIP/st180304/st180304/LibriSpeech"

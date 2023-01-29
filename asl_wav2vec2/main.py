@@ -34,7 +34,7 @@ def main(argv):
     ds_train, ds_val, ds_test = load_dataset.load()
 
     data_collator = DataCollatorCTCWithPadding(processor=processor, padding=True)
-    repo_name = "/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/asl_wav2vec2/checkpoint"
+    repo_name = "/home/RUS_CIP/st180304/st180304/libri_checkpoint-a"
     wer_metric = WerMetricClass(processor)
 
     wandb.login(anonymous="allow", key="8b5621f60202d49f7fa98ffafcb02ebbe4a3a314")
@@ -71,7 +71,7 @@ def main(argv):
 
     trainer.train()
 
-    trainer.save_model(output_dir="")
+    trainer.save_model(output_dir="/home/RUS_CIP/st180304/st180304/librispeech_save_model-a")
 
 
 if __name__ == "__main__":
