@@ -8,6 +8,14 @@ class WerMetricClass(object):
         self.processor = processor
 
     def compute_metrics(self, pred):
+        """
+        Function to compute metrics
+        Args:
+            pred: object with prediction and label
+
+        Returns:
+            WER rate
+        """
         pred_logits = pred.predictions
         pred_ids = np.argmax(pred_logits, axis=-1)
 

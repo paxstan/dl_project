@@ -1,27 +1,34 @@
-import tensorflow as tf
-import tensorflow_hub as hub
-from wav2vec2 import Wav2Vec2Config
 from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
-
-AUDIO_MAXLEN = 246000
-LABEL_MAXLEN = 256
-BATCH_SIZE = 2
-
-
-class wav2vec2_tf(object):
-    def __init__(self):
-        self.config = Wav2Vec2Config()
-
-        pretrained_layer = hub.KerasLayer("https://tfhub.dev/vasudevgupta7/wav2vec2/1", trainable=True)
-        inputs = tf.keras.Input(shape=(AUDIO_MAXLEN,))
-        hidden_states = pretrained_layer(inputs)
-        outputs = tf.keras.layers.Dense(self.config.vocab_size)(hidden_states)
-
-        self.model = tf.keras.Model(inputs=inputs, outputs=outputs)
-        self.model(tf.random.uniform(shape=(BATCH_SIZE, AUDIO_MAXLEN)))
-        self.model.summary()
 
 
 class Wav2Vec2100h(object):
-    processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-100h")
-    model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-100h")
+    """
+    Class to load Wav2Vec2 model
+    """
+    def __init__(self):
+        # get processor from pretrained model
+        self.processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-100h")
+        # get pretrained model from hugging face hub
+        self.model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-100h",
+                                                    ctc_loss_reduction="mean",
+                                                    pad_token_id=self.processor.tokenizer.pad_token_id)
+
+        # freeze the stack of CNN layers which is used for feature extraction
+        self.model.freeze_feature_encoder()
+
+    def load_from_checkpoint(self, run_paths):
+        """
+        Load from checkpoint to continue training
+        Args:
+            run_paths: dictionary of run path
+        """
+        self.model = Wav2Vec2ForCTC.from_pretrained(run_paths['path_ckpts_train'])
+
+    def load_from_saved_model(self, run_paths):
+        """
+        Loads saved model for evaluation
+        Args:
+            run_paths:
+
+        """
+        self.model = Wav2Vec2ForCTC.from_pretrained(run_paths['path_saved_model_train']).cuda()

@@ -1,6 +1,10 @@
 # Input pipeline
-# load.data_dir = "/home/RUS_CIP/st180304/st180304/LJSpeechDataset"
-# load.data_dir = "/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/asl_speech_to_visual/Data/SpeechCommand"
-# load.data_dir = "/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/asl_speech_to_visual/Data/LJSpeech_small"
-# load.data_dir = "/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/asl_speech_to_visual/Data/LibriSpeech_small"
+# LoadDataset.data_dir = "/home/RUS_CIP/st180304/st180304/LibriSpeech"
 LoadDataset.data_dir = "/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/asl_speech_to_visual/Data/LibriSpeech"
+Train.epochs = 30
+Train.learning_rate = 1e-4
+Train.weight_decay = 0.005
+Train.wandb_key = "8b5621f60202d49f7fa98ffafcb02ebbe4a3a314"
+Train.wandb_project = "asl_wav2vec2"
+# ModelToMobileConvertor.audio_path = "/home/RUS_CIP/st180304/st180304/LibriSpeech/dev-clean/dev-clean/84/121123/84-121123-0005.flac"
+ModelToMobileConvertor.audio_path = "/home/paxstan/Documents/Uni/DL_Lab/dl-lab-22w-team07/asl_speech_to_visual/Data/LibriSpeech/dev-clean/dev-clean/84/121123/84-121123-0005.flac"
