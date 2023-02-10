@@ -1,1 +1,0 @@
-# ASL Learning Android App
