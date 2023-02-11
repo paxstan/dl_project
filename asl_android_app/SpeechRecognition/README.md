@@ -10,4 +10,10 @@ In this demo app, we'll show how to quantize, trace, and optimize the wav2vec2 m
 * Android Pytorch library org.pytorch:pytorch_android_lite:1.10.0
 * Android Studio 4.0.1 or later
 
+## Working of Android Application
+<p float="left">
+<img src="results/asl_exp2.jpg" height="500">
+<img src="results/asl_exp1.jpg" height="500">
+</p>
+
 
